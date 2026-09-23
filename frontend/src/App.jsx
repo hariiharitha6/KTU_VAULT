@@ -3,31 +3,44 @@
 } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  BookOpen, Target, ChevronDown, Zap, Sparkles,
-  Calendar, Coffee, Trash2, AlertCircle, Download, KeyRound,
-  ArrowRight, Lightbulb, Lock, Settings2, Plus,
-  Star, TrendingUp, Wand2, FileText,
+  BookOpen, Target, ChevronDown,
+  Calendar, Trash2, AlertCircle, KeyRound,
+  ArrowRight, Settings2,
   Shield, ChevronRight, Telescope, CheckCircle,
-  XCircle, ExternalLink, Brain, Activity,
-  Database, Network, Timer, Play, Pause,
-  RotateCcw, SkipForward, ChevronUp, BookMarked,
-  Flame, Award, Clock, X, Check,
+  XCircle, ExternalLink, Brain,
+  Timer, Play, Pause,
+  RotateCcw, ChevronUp, BookMarked,
+  Flame, Clock, X, Check,
   ArrowLeft, Repeat, Eye, EyeOff, Hash, BarChart3,
-  Percent, TrendingDown, Layers, MessageCircle,
-  Send, Bot, User, ChevronLeft, GraduationCap,
-  ClipboardList, Sigma, ListChecks, AlarmClock,
-  SlidersHorizontal, Cpu, GitBranch, Atom,
-  LayoutGrid, Compass, Rocket, Trophy, Fingerprint,
-  Wifi, WifiOff, RefreshCw, Copy, Bookmark,
-  Focus, Moon, Sun
+  Layers, MessageCircle,
+  Send, Bot, User, GraduationCap,
+  Rocket, RefreshCw, Copy, Bookmark,
+  Focus
 } from 'lucide-react';
 import { subjectDetails, SCHEME_RULES, deptNames, studyData } from './data/subjectData.js';
 import DOMPurify from 'dompurify';
+import {
+  GEMINI_MODEL,
+  SUPPORTED_GEMINI_MODELS,
+  isRetiredGeminiModel,
+} from './lib/ai/config.js';
+import {
+  GEMINI_ERROR_CATEGORIES,
+  discoverGeminiModels,
+  testGeminiModel,
+  generateContent,
+  healGeminiModel,
+  clearGeminiHealCache,
+} from './lib/ai/client.js';
+import {
+  buildAIHealthReport,
+  describeModelStatus,
+  formatHealthReportLine,
+} from './lib/ai/diagnose.js';
 // ============================================================
 // POLYFILL — AggregateError (BUG 13)
 // ============================================================
 if (typeof AggregateError === 'undefined') {
-  // eslint-disable-next-line no-global-assign
   globalThis.AggregateError = class AggregateError extends Error {
     constructor(errors, message) {
       super(message);
@@ -114,10 +127,7 @@ const AI_PROVIDERS = [
     badgeBg: 'rgba(134,223,186,0.15)',
     link: 'https://aistudio.google.com/app/apikey', linkLabel: 'Get Free Key →',
     featured: true,
-    models: [
-      'gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-1.5-pro',
-      'gemini-2.0-flash', 'gemini-2.5-flash-preview-05-20',
-    ],
+    models: SUPPORTED_GEMINI_MODELS,
   },
   {
     id: 'openrouter', name: 'OpenRouter', icon: '🔀', color: '#a78bfa',
@@ -128,11 +138,11 @@ const AI_PROVIDERS = [
     featured: true,
     baseUrl: 'https://openrouter.ai/api/v1',
     models: [
-      'meta-llama/llama-3.3-70b-instruct:free',
+      'google/gemini-2.5-flash:free',
+      'google/gemini-2.5-flash',
       'deepseek/deepseek-chat:free',
-      'google/gemini-2.0-flash-exp:free',
+      'meta-llama/llama-3.3-70b-instruct:free',
       'qwen/qwen-2.5-72b-instruct:free',
-      'meta-llama/llama-3.2-11b-vision-instruct:free',
       'mistralai/mistral-7b-instruct:free',
     ],
   },
@@ -398,6 +408,7 @@ async function withRetry(fn, maxRetries = 2, baseDelayMs = 1000) {
         msg.includes('forbidden') || msg.includes('401')    ||
         msg.includes('403')       || msg.includes('empty prompt')
       ) throw err;
+      if (err?.isGemini && err.category === GEMINI_ERROR_CATEGORIES.MODEL_UNAVAILABLE) throw err;
       if (attempt === maxRetries) throw err;
       const delay = baseDelayMs * Math.pow(2, attempt) + Math.random() * 200;
       await new Promise(r => setTimeout(r, delay));
@@ -497,200 +508,61 @@ function maskApiKey(key, noKey = false) {
   return `${k.slice(0, 6)}${'•'.repeat(8)}${k.slice(-4)}`;
 }
 
-// ── Parallel Gemini verification (BUG 1 core fix) ──
-async function verifyGeminiParallel(apiKey, onProgress) {
-  const provider      = AI_PROVIDERS.find(p => p.id === 'gemini');
-  let availableModels = [...(provider?.models || [])];
+// ── Centralized Gemini verification (BUG 1 core fix) ──
+// Never returns a model that failed verification. Retired/unsupported models
+// are filtered out up front, and the "speculative pick-first" fallback is gone.
+async function verifyGeminiParallel(apiKey, onProgress, isExpress = false) {
+  const label = isExpress ? 'Gemini Express' : 'Gemini';
+  const fetcher = (url, opts, ms) => apiClient.request(url, opts, ms);
 
-  // Fetch model list with header auth
+  let liveModels = [];
+  if (onProgress) onProgress(`Fetching ${label} model list...`);
   try {
-    if (onProgress) onProgress('Fetching Gemini model list...');
-    const lr = await apiClient.request(
-      'https://generativelanguage.googleapis.com/v1beta/models',
-      { headers: { 'x-goog-api-key': apiKey } },
-      10000
-    );
-    if (lr.ok) {
-      const ld    = await lr.json();
-      const found = (ld.models || [])
-        .filter(m => m.name && m.supportedGenerationMethods?.includes('generateContent'))
-        .map(m => m.name.replace('models/', ''));
-      if (found.length > 0) {
-        const preferred = (provider?.models || []).filter(m => found.includes(m));
-        const extra     = found.filter(m => !(provider?.models || []).includes(m));
-        availableModels = [...preferred, ...extra].slice(0, 10);
-      }
+    liveModels = await discoverGeminiModels({ apiKey, fetcher });
+  } catch { liveModels = []; }
+
+  const preferred = SUPPORTED_GEMINI_MODELS.filter(m => !isRetiredGeminiModel(m));
+  const extras    = liveModels.filter(m => !preferred.includes(m));
+  const order     = [...preferred, ...extras].slice(0, 12);
+
+  if (onProgress) onProgress(`Testing ${label} models in parallel...`);
+
+  const testResults = await Promise.allSettled(
+    order.map(model => testGeminiModel({ apiKey, model, fetcher }))
+  );
+
+  // Hard auth failure → fail fast
+  for (const r of testResults) {
+    if (r.status === 'rejected' && r.reason?.isGemini) throw r.reason;
+    if (r.status === 'fulfilled' && r.value?.hardAuth) {
+      throw new Error('Invalid Gemini key: API key rejected by Google. Verify the key at Google AI Studio.');
     }
-  } catch (_) {}
+  }
 
-  if (onProgress) onProgress('Testing Gemini models in parallel...');
-
-  // ALL models tested in parallel — BUG 1 core fix
-  const testResults = await Promise.allSettled(
-    availableModels.map(async model => {
-      const res = await apiClient.request(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-goog-api-key': apiKey,          // HEADER not ?key=
-          },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: 'Say OK' }] }],
-            generationConfig: { maxOutputTokens: 5 },
-          }),
-        },
-        12000
-      );
-      if (res.ok) return { model, ok: true };
-
-      const d        = await res.json().catch(() => ({}));
-      const errMsg   = d?.error?.message || `HTTP ${res.status}`;
-      const lowerErr = errMsg.toLowerCase();
-
-      // Auth error → hard fail
-      if (
-        res.status === 401 || res.status === 403 ||
-        lowerErr.includes('api key not valid') ||
-        lowerErr.includes('invalid api key')   ||
-        lowerErr.includes('permission denied')
-      ) {
-        const e   = new Error(`Invalid Gemini key: ${errMsg}`);
-        e.isAuth  = true;
-        throw e;
-      }
-      // Quota → skip this model
-      if (
-        res.status === 429 || res.status === 529 || res.status === 404 ||
-        lowerErr.includes('not found') ||
-        lowerErr.includes('is not supported') ||
-        lowerErr.includes('not supported for')
-      ) {
-        return { model, ok: false, quota: true };
-      }
-      return { model, ok: false, error: errMsg };
-    })
-  );
-
-  // Propagate auth failure immediately
+  const ok = [];
+  const skip = [];
+  const failed = [];
   for (const r of testResults) {
-    if (r.status === 'rejected' && r.reason?.isAuth) throw r.reason;
+    if (r.status === 'rejected') { failed.push(r.reason?.message || 'test error'); continue; }
+    const v = r.value;
+    if (v.ok) ok.push(v.model);
+    else if (v.skip) skip.push(v);
+    else failed.push(v.error);
   }
 
-  let workingModel = null;
-  for (const r of testResults) {
-    if (r.status === 'fulfilled' && r.value?.ok) { workingModel = r.value.model; break; }
+  if (ok.length > 0) {
+    return { provider: isExpress ? 'gemini_express' : 'gemini', model: ok[0], availableModels: order, detectedName: isExpress ? 'Google Gemini (Express)' : 'Google Gemini' };
   }
 
-  // All quota/404 → return speculatively (key is valid, models just throttled or unsupported)
-  if (!workingModel && testResults.every(r => r.status === 'fulfilled' && r.value?.quota)) {
-    workingModel = availableModels[0];
+  const allTransient = skip.length > 0 && failed.length === 0 &&
+    skip.every(v => v.category === GEMINI_ERROR_CATEGORIES.RATE_LIMITED || v.category === GEMINI_ERROR_CATEGORIES.QUOTA_EXCEEDED);
+
+  if (allTransient) {
+    throw new Error(`${label} key looks valid, but every supported model is currently rate-limited or out of quota. Wait a minute and retry.`);
   }
 
-  if (!workingModel) {
-    const lastErr = testResults
-      .map(r => r.status === 'fulfilled' ? r.value?.error : r.reason?.message)
-      .filter(Boolean).pop() || 'All models failed';
-    throw new Error(`All Gemini models failed: ${lastErr}`);
-  }
-
-  return { provider: 'gemini', model: workingModel, availableModels, detectedName: 'Google Gemini' };
-}
-
-// ── Parallel Gemini Express verification ──
-// Skip 404 "not found" errors (model unsupported) same as quota errors
-async function verifyGeminiExpressParallel(apiKey, onProgress) {
-  // Ordered newest → oldest; Express typically supports only the newer ones
-  const expressModels = [
-    'gemini-2.0-flash-exp',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash-8b',
-    'gemini-1.5-flash',
-    'gemini-1.5-pro',
-  ];
-  if (onProgress) onProgress('Testing Gemini Express token in parallel...');
-
-  const testResults = await Promise.allSettled(
-    expressModels.map(async model => {
-      const res = await apiClient.request(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: 'Say OK' }] }],
-            generationConfig: { maxOutputTokens: 5 },
-          }),
-        },
-        15000
-      );
-      if (res.ok) return { model, ok: true };
-      const d        = await res.json().catch(() => ({}));
-      const errMsg   = d?.error?.message || `HTTP ${res.status}`;
-      const lowerErr = errMsg.toLowerCase();
-
-      // Auth error — hard fail
-      if (
-        res.status === 401 || res.status === 403 ||
-        lowerErr.includes('api key not valid') ||
-        lowerErr.includes('invalid api key')   ||
-        lowerErr.includes('permission denied')
-      ) {
-        const e  = new Error(`Invalid Gemini Express token: ${errMsg}`);
-        e.isAuth = true;
-        throw e;
-      }
-
-      // Quota, 404 not-found, or "not supported" → skip this model
-      if (
-        res.status === 429 || res.status === 529 || res.status === 404 ||
-        lowerErr.includes('not found') ||
-        lowerErr.includes('is not supported') ||
-        lowerErr.includes('not supported for')
-      ) {
-        return { model, ok: false, skip: true };
-      }
-
-      return { model, ok: false, error: errMsg };
-    })
-  );
-
-  // Propagate auth failure immediately
-  for (const r of testResults) {
-    if (r.status === 'rejected' && r.reason?.isAuth) throw r.reason;
-  }
-
-  // Find first working model
-  let workingModel = null;
-  for (const r of testResults) {
-    if (r.status === 'fulfilled' && r.value?.ok) { workingModel = r.value.model; break; }
-  }
-
-  // If all models were skipped (quota/404) → key is likely valid, pick first
-  if (!workingModel && testResults.every(r => r.status === 'fulfilled' && r.value?.skip)) {
-    workingModel = expressModels[0];
-  }
-
-  if (!workingModel) {
-    const lastErr = testResults
-      .map(r => r.status === 'fulfilled' ? r.value?.error : r.reason?.message)
-      .filter(Boolean).pop() || 'All models failed';
-    throw new Error(`Gemini Express token failed: ${lastErr}`);
-  }
-
-  // Only return models that actually worked or are unknown, exclude 404s
-  const usableModels = testResults
-    .filter(r => r.status === 'fulfilled' && (r.value?.ok || !r.value?.skip))
-    .map(r => r.value.model);
-  const finalModels = usableModels.length > 0 ? usableModels : [workingModel];
-
-  return {
-    provider: 'gemini_express',
-    model: workingModel,
-    availableModels: finalModels,
-    detectedName: 'Google Gemini (Express)',
-  };
+  const detail = failed[0] || 'No currently supported Gemini model responded.';
+  throw new Error(`No working ${label} model found. ${detail}`);
 }
 
 async function probeProvider(apiKey, providerId, onProgress) {
@@ -839,8 +711,8 @@ async function universalVerify(apiKey, providerHint = null, customBaseUrl = '', 
 async function verifySpecificProvider(apiKey, providerId, onProgress) {
   const progress = msg => { if (onProgress) onProgress(msg); };
 
-  if (providerId === 'gemini_express') return await verifyGeminiExpressParallel(apiKey, progress);
-  if (providerId === 'gemini')         return await verifyGeminiParallel(apiKey, progress);
+  if (providerId === 'gemini_express') return await verifyGeminiParallel(apiKey, progress, true);
+  if (providerId === 'gemini')         return await verifyGeminiParallel(apiKey, progress, false);
 
   if (providerId === 'claude') {
     progress('Testing Claude...');
@@ -1090,57 +962,27 @@ function makeCallAI(provider, apiKey, model, customBaseUrl = '') {
     // withRetry wraps entire dispatch — no nested withRetry anywhere
     return await withRetry(async () => {
 
-      // ── Gemini Express ──
-      if (provider === 'gemini_express') {
-        const res = await apiClient.request(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type':  'application/json',
-              'x-goog-api-key': apiKey,
-            },
-            body: JSON.stringify({
-              contents:         [{ parts: [{ text: prompt }] }],
-              generationConfig: { maxOutputTokens: 8192, temperature: 0.4 },
-            }),
-          },
-          60000
-        );
-        if (!res.ok) {
-          const d = await res.json().catch(() => ({}));
-          throw new Error(d?.error?.message || `Gemini Express error ${res.status}`);
+      // ── Gemini + Gemini Express — centralized REST client ──
+      // Self-heals retired/unsupported models: verifies a live model and retries once.
+      if (provider === 'gemini' || provider === 'gemini_express') {
+        const fetcher = (url, opts, ms) => apiClient.request(url, opts, ms);
+        let text;
+        try {
+          text = await generateContent({ apiKey, model, prompt, fetcher });
+        } catch (err) {
+          if (err?.isGemini && err.category === GEMINI_ERROR_CATEGORIES.MODEL_UNAVAILABLE) {
+            const healed = await healGeminiModel({ apiKey, requestedModel: model, fetcher });
+            if (!healed) throw err;
+            const saved = SecureStorage.load(STORAGE_KEY);
+            if (saved && typeof saved === 'object' && saved.model === model) {
+              saved.model = healed;
+              SecureStorage.save(STORAGE_KEY, saved);
+            }
+            text = await generateContent({ apiKey, model: healed, prompt, fetcher });
+          } else {
+            throw err;
+          }
         }
-        const d    = await res.json();
-        const text = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        if (!text.trim()) throw new Error('Model returned an empty response.');
-        return text;
-      }
-
-      // ── Gemini (AIza key) — header auth ──
-      if (provider === 'gemini') {
-        const res = await apiClient.request(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type':  'application/json',
-              'x-goog-api-key': apiKey,          // HEADER — not ?key=
-            },
-            body: JSON.stringify({
-              contents:         [{ parts: [{ text: prompt }] }],
-              generationConfig: { maxOutputTokens: 8192, temperature: 0.4 },
-            }),
-          },
-          60000
-        );
-        if (!res.ok) {
-          const d = await res.json().catch(() => ({}));
-          throw new Error(d?.error?.message || `Gemini error ${res.status}`);
-        }
-        const d    = await res.json();
-        const text = d.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        if (!text.trim()) throw new Error('Model returned an empty response.');
         return text;
       }
 
@@ -1270,26 +1112,6 @@ function getSchemeRules(scheme) {
     partB:       rules.partB       || { marksEach: 9,  totalMarks: 45 },
     note:        rules.note        || '',
   };
-}
-
-function checkPassStatus(internalMarks, externalMarks, scheme) {
-  const rules    = getSchemeRules(scheme);
-  const internal = parseInt(internalMarks) || 0;
-  const external = parseInt(externalMarks) || 0;
-  const total    = internal + external;
-  const totalMax = rules.internalMax + rules.externalMax;
-
-  if (external < rules.minExternal) {
-    return { status: 'fail', reason: `External ${external}/${rules.externalMax} is below minimum ${rules.minExternal}.` };
-  }
-  if (rules.minInternal && internal < rules.minInternal) {
-    return { status: 'fail', reason: `Internal ${internal}/${rules.internalMax} is below minimum ${rules.minInternal}.` };
-  }
-  if (total < rules.minTotal) {
-    const needed = calcMinExternalNeeded(internal, scheme);
-    return { status: 'fail', reason: `Total ${total}/${totalMax} is below minimum ${rules.minTotal}. Need ${needed} in exam.` };
-  }
-  return { status: 'pass', reason: `✓ Pass criteria met. External ${external}/${rules.externalMax}, Total ${total}/${totalMax}.` };
 }
 
 function calcMinExternalNeeded(internalMarks, scheme) {
@@ -1641,7 +1463,6 @@ function useReadingProgress(containerRef) {
       window.removeEventListener('scroll', handler);
       if (el) el.removeEventListener('scroll', handler);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [containerRef]);
 
   return progress;
@@ -1948,6 +1769,10 @@ function VerifyBlock({ hook }) {
               <p className="text-xs font-black" style={{ color: '#86dfba' }}>Verified! Ready to launch.</p>
               <p className="text-[11px] truncate" style={{ color: '#9ba7b8' }}>
                 {verifiedConfig.detectedName || detectedProv?.name || 'Provider'} · {verifiedConfig.model}
+              </p>
+              <p className="text-[10px] font-mono truncate" style={{ color: '#64748b' }}
+                title={formatHealthReportLine(buildAIHealthReport(verifiedConfig))}>
+                {formatHealthReportLine(buildAIHealthReport(verifiedConfig))}
               </p>
             </div>
             {detectedProv && <div className="text-xl flex-shrink-0">{detectedProv.icon}</div>}
@@ -4382,7 +4207,8 @@ function BootScreen({ onBoot, initialError = '' }) {
   const { apiKey, setApiKey, verifyStatus, verifiedConfig, selectedModel, detectedProvider, selectProvider, manualProvider } = hook;
   const [showKey, setShowKey] = useState(false);
 
-  useEffect(() => { if (initialError) hook.reset(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [initialError]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (initialError) hook.reset(); }, [initialError]);
 
   const handleBoot = useCallback(() => {
     if (verifyStatus === 'success' && verifiedConfig) {
@@ -5091,7 +4917,7 @@ function StudyScreen({ config, callAI, aiConfig, onBack, onRevision, onChangeAPI
   }, [subject, scheme]);
 
   const isDrawing = useMemo(() => isDrawingSubject(subject), [subject]);
-  const [runtimeTargetMark, setRuntimeTargetMark] = useState(targetMark || '');
+  const [runtimeTargetMark] = useState(targetMark || '');
   const [studiedIds, setStudiedIds] = useState(new Set());
   const [activeTab, setActiveTab] = useState('A');
   const [selectedModules, setSelectedModules] = useState([]);
@@ -5130,7 +4956,6 @@ function StudyScreen({ config, callAI, aiConfig, onBack, onRevision, onChangeAPI
     if (focusMode) requestAnimationFrame(() => window.scrollTo(0, scrollPosRef.current));
   }, [focusMode]);
 
-  const handleStrategyApplied = useCallback((newTarget) => { if (newTarget) setRuntimeTargetMark(String(newTarget)); setShowTarget(false); }, []);
   const providerInfo = aiConfig ? AI_PROVIDERS.find(p => p.id === aiConfig.provider) : null;
   const details = subjectDetails[subject] || {};
   const partAQs = allQuestions.filter(q => q.partType === 'A');
@@ -5480,9 +5305,9 @@ class ErrorBoundary extends React.Component {
   static getDerivedStateFromError(error) { return { hasError: true, error }; }
   componentDidCatch(error) {
     const safeMsg = String(error?.message || 'Unknown error')
-      .replace(/sk-[a-zA-Z0-9\-_]+/g, 'sk-***').replace(/AIza[a-zA-Z0-9_\-]+/g, 'AIza***')
-      .replace(/AQ\.[a-zA-Z0-9_\-]+/g, 'AQ.***').replace(/nvapi-[a-zA-Z0-9_\-]+/g, 'nvapi-***')
-      .replace(/gsk_[a-zA-Z0-9_\-]+/g, 'gsk_***').replace(/xai-[a-zA-Z0-9_\-]+/g, 'xai-***')
+      .replace(/sk-[a-zA-Z0-9\-_]+/g, 'sk-***').replace(/AIza[a-zA-Z0-9_-]+/g, 'AIza***')
+      .replace(/AQ\.[a-zA-Z0-9_-]+/g, 'AQ.***').replace(/nvapi-[a-zA-Z0-9_-]+/g, 'nvapi-***')
+      .replace(/gsk_[a-zA-Z0-9_-]+/g, 'gsk_***').replace(/xai-[a-zA-Z0-9_-]+/g, 'xai-***')
       .replace(/Bearer\s+[a-zA-Z0-9_\-.]+/g, 'Bearer ***');
     console.error('ATLAS ErrorBoundary:', safeMsg);
   }
@@ -5550,7 +5375,11 @@ function AppInner() {
       saved.provider === 'custom'
     );
 
-    if (saved.provider && saved.model && knownProvider) {
+    // Retired models (e.g. gemini-2.0-flash-exp) must never be trusted from storage —
+    // they cause the exact "model not found for API version v1beta" generation failure.
+    const modelDeprecated = describeModelStatus(saved.provider, saved.model) === 'deprecated';
+
+    if (saved.provider && saved.model && knownProvider && !modelDeprecated) {
       setAiConfig({
         provider: saved.provider, apiKey: saved.apiKey, model: saved.model,
         customBaseUrl: saved.customBaseUrl || '', detectedName: saved.detectedName || '',
@@ -5559,7 +5388,7 @@ function AppInner() {
       return;
     }
 
-    // Re-verify if provider unknown or missing
+    // Re-verify if provider unknown, model retired, or config incomplete
     setScreen('reconnecting');
     const providerId    = saved.provider || detectProviderByPrefix(saved.apiKey);
     const providerToUse = (providerId && providerId !== 'unknown') ? providerId : null;
@@ -5575,11 +5404,20 @@ function AppInner() {
         setScreen('dashboard');
       })
       .catch(() => {
+        // If the ONLY problem was a retired model, fall back to the safe default
+        // (generation self-heals from there) instead of logging the user out.
+        if (modelDeprecated) {
+          setAiConfig({
+            provider: saved.provider, apiKey: saved.apiKey, model: GEMINI_MODEL,
+            customBaseUrl: saved.customBaseUrl || '', detectedName: saved.detectedName || '',
+          });
+          setScreen('dashboard');
+          return;
+        }
         SecureStorage.clearAll();
         setBootError('Session expired or key is no longer valid. Please re-enter your API key.');
         setScreen('boot');
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -5598,6 +5436,12 @@ function AppInner() {
     return makeCallAI(aiConfig.provider, aiConfig.apiKey, aiConfig.model, aiConfig.customBaseUrl || '');
   }, [aiConfig]);
 
+  useEffect(() => {
+    if (import.meta.env?.DEV) {
+      console.info('[ATLAS] AI health:', buildAIHealthReport(aiConfig));
+    }
+  }, [aiConfig]);
+
   const handleChangeAPI = useCallback(() => setShowChangeAPI(true), []);
 
   const handleAPIUpdate = useCallback((newConfig) => {
@@ -5610,10 +5454,11 @@ function AppInner() {
         setTimeout(() => conversationManager.setMigrating(false), 2500);
       }
       apiClient.abortAll();
+      clearGeminiHealCache();
       setAiConfig(newConfig);
       setShowChangeAPI(false);
     } else {
-      SecureStorage.clearAll(); conversationManager.clear(); apiClient.abortAll(); rateLimiter.clear();
+      SecureStorage.clearAll(); conversationManager.clear(); apiClient.abortAll(); rateLimiter.clear(); clearGeminiHealCache();
       setAiConfig(null); setStudyConfig(null); setStudiedForRevision([]); setShowChangeAPI(false); setScreen('boot');
     }
   }, [aiConfig]);
