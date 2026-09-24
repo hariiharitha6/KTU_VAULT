@@ -18,6 +18,8 @@ import {
   Focus
 } from 'lucide-react';
 import { subjectDetails, SCHEME_RULES, deptNames, studyData } from './data/subjectData.js';
+import { resolveExactFigure } from './lib/exactFigures.js';
+import { ExactFigureRenderer } from './lib/exactFigures.jsx';
 import DOMPurify from 'dompurify';
 import {
   GEMINI_MODEL,
@@ -102,16 +104,16 @@ const VERIFY_PHASES = [
 ];
 
 const FEATURES = [
-  { icon: Brain,         title: "RAG-Powered",       desc: "Answers grounded strictly in KTU syllabus",         color: "#7c9eff" },
+  { icon: Brain,         title: "RAG-Powered",       desc: "Answers grounded strictly in KTU syllabus",         color: "#5F8ECC" },
   { icon: Target,        title: "Target Strategist",  desc: "Input target score → get exact questions to study", color: "#86dfba" },
   { icon: BarChart3,     title: "Probability Engine", desc: "AI-scored question probability from PYQ analysis",  color: "#f0c987" },
-  { icon: BookOpen,      title: "Model Answers",      desc: "Full-mark structured KTU-style answers",            color: "#a78bfa" },
+  { icon: BookOpen,      title: "Model Answers",      desc: "Full-mark structured KTU-style answers",            color: "#3D5F94" },
   { icon: Layers,        title: "Part A & B Split",   desc: "Smart UX for short vs detailed answers",            color: "#e8a598" },
   { icon: Timer,         title: "Focus Timer",        desc: "Built-in Pomodoro for study sessions",              color: "#8ecae6" },
   { icon: Calendar,      title: "AI Scheduler",       desc: "Day-by-day timetable from your exam date",          color: "#86dfba" },
   { icon: GraduationCap, title: "CIE Tracker",        desc: "Know your safe zone from internal marks",           color: "#f0c987" },
   { icon: Shield,        title: "Pass Calculator",    desc: "2019 & 2024 scheme pass logic",                     color: "#e8a598" },
-  { icon: Bot,           title: "AI Tutor",           desc: "Chat for doubts, grounded in your subject",         color: "#a78bfa" },
+  { icon: Bot,           title: "AI Tutor",           desc: "Chat for doubts, grounded in your subject",         color: "#3D5F94" },
 ];
 
 // ============================================================
@@ -204,7 +206,7 @@ const AI_PROVIDERS = [
     models: ['moonshot-v1-8k', 'moonshot-v1-32k', 'moonshot-v1-128k'],
   },
   {
-    id: 'xai',        name: 'xAI Grok',          icon: '𝕏',  color: '#718096',
+    id: 'xai',        name: 'xAI Grok',          icon: '𝕏',  color: '#788AA2',
     baseUrl: 'https://api.x.ai/v1',
     models: ['grok-2-latest', 'grok-2-1212', 'grok-beta'],
   },
@@ -262,7 +264,7 @@ const AI_PROVIDERS = [
     models: ['meta-llama/Meta-Llama-3-70B-Instruct'],
   },
   {
-    id: 'ollama',     name: 'Ollama (Local)',     icon: '🦙', color: '#4a5568',
+    id: 'ollama',     name: 'Ollama (Local)',     icon: '🦙', color: '#6B7C96',
     baseUrl: 'http://localhost:11434/v1',
     models: ['llama3.2', 'llama3.1', 'mistral', 'codellama'],
     noKey: true,
@@ -1096,7 +1098,7 @@ function freqToBadge(freq) {
   const conf = freqToConfidence(freq);
   if (conf >= 80) return { label: 'HIGH', emoji: '🔥', color: '#86dfba', bg: 'rgba(134,223,186,0.12)', border: 'rgba(134,223,186,0.3)' };
   if (conf >= 65) return { label: 'MED',  emoji: '⚡', color: '#f0c987', bg: 'rgba(240,201,135,0.12)', border: 'rgba(240,201,135,0.3)' };
-  return           { label: 'LOW',  emoji: '📌', color: '#9ba7b8', bg: 'rgba(155,167,184,0.1)',  border: 'rgba(155,167,184,0.2)'  };
+  return           { label: 'LOW',  emoji: '📌', color: '#697B96', bg: 'rgba(100,142,204,0.08)',  border: 'rgba(100,142,204,0.14)'  };
 }
 
 function getSchemeRules(scheme) {
@@ -1497,29 +1499,29 @@ function AtlasLogo({ size = 48 }) {
       xmlns="http://www.w3.org/2000/svg" aria-label="ATLAS logo" role="img">
       <defs>
         <radialGradient id="atlasGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%"   stopColor="#7c9eff" />
-          <stop offset="60%"  stopColor="#a78bfa" />
+          <stop offset="0%"   stopColor="#5F8ECC" />
+          <stop offset="60%"  stopColor="#3D5F94" />
           <stop offset="100%" stopColor="#c4b5fd" />
         </radialGradient>
         <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%"   stopColor="#7c9eff" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#7c9eff" stopOpacity="0"   />
+          <stop offset="0%"   stopColor="#5F8ECC" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#5F8ECC" stopOpacity="0"   />
         </radialGradient>
       </defs>
       <circle cx="50" cy="50" r="48" fill="url(#glowGrad)" />
-      <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(124,158,255,0.4)" strokeWidth="1.5" />
+      <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(100,142,204,0.3)" strokeWidth="1.5" />
       {[[50,18,72,35],[72,35,68,62],[68,62,42,72],[42,72,22,55],[22,55,30,28],[30,28,50,18]].map(([x1,y1,x2,y2],i) => (
-        <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#7c9eff" strokeWidth="1" strokeOpacity="0.6" />
+        <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#5F8ECC" strokeWidth="1" strokeOpacity="0.6" />
       ))}
       {[[50,18],[72,35],[68,62],[42,72],[22,55],[30,28]].map(([cx,cy],i) => (
         <circle key={i} cx={cx} cy={cy} r="2.5" fill="#c4b5fd" fillOpacity="0.9" />
       ))}
       <rect x="38" y="44" width="24" height="10" rx="3" fill="url(#atlasGrad)" />
-      <ellipse cx="62" cy="49" rx="5" ry="6" fill="#a78bfa" fillOpacity="0.8" />
-      <rect x="33" y="46" width="8" height="6" rx="2" fill="#7c9eff" fillOpacity="0.9" />
-      <line x1="50" y1="54" x2="42" y2="70" stroke="#7c9eff" strokeWidth="2" strokeOpacity="0.7" />
-      <line x1="50" y1="54" x2="58" y2="70" stroke="#7c9eff" strokeWidth="2" strokeOpacity="0.7" />
-      <line x1="50" y1="54" x2="50" y2="70" stroke="#7c9eff" strokeWidth="2" strokeOpacity="0.7" />
+      <ellipse cx="62" cy="49" rx="5" ry="6" fill="#3D5F94" fillOpacity="0.8" />
+      <rect x="33" y="46" width="8" height="6" rx="2" fill="#5F8ECC" fillOpacity="0.9" />
+      <line x1="50" y1="54" x2="42" y2="70" stroke="#5F8ECC" strokeWidth="2" strokeOpacity="0.7" />
+      <line x1="50" y1="54" x2="58" y2="70" stroke="#5F8ECC" strokeWidth="2" strokeOpacity="0.7" />
+      <line x1="50" y1="54" x2="50" y2="70" stroke="#5F8ECC" strokeWidth="2" strokeOpacity="0.7" />
       <circle cx="50" cy="49" r="3" fill="white" fillOpacity="0.95" />
     </svg>
   );
@@ -1563,15 +1565,15 @@ function ProviderSwitchToast({ show, fromProvider, toProvider, onComplete }) {
           style={{ pointerEvents: 'none' }}
         >
           <div className="glass-panel rounded-2xl px-5 py-3 flex items-center space-x-3"
-            style={{ border: '1px solid rgba(124,158,255,0.3)' }}>
+            style={{ border: '1px solid rgba(100,142,204,0.24)' }}>
             <motion.div animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-              <RefreshCw className="w-4 h-4" style={{ color: '#7c9eff' }} />
+              <RefreshCw className="w-4 h-4" style={{ color: '#5F8ECC' }} />
             </motion.div>
             <div className="text-sm">
-              <span className="font-bold" style={{ color: '#e6ebf2' }}>Switching AI</span>
+              <span className="font-bold" style={{ color: '#B7C6DC' }}>Switching AI</span>
               {fromInfo && toInfo && (
-                <span className="ml-2" style={{ color: '#9ba7b8' }}>
+                <span className="ml-2" style={{ color: '#697B96' }}>
                   {fromInfo.icon} → {toInfo.icon} {toInfo.name}
                 </span>
               )}
@@ -1610,14 +1612,14 @@ function ProviderSelector({ onSelect, selected, customBaseUrl, setCustomBaseUrl,
             onClick={() => onSelect(p.id)}
             className="relative flex flex-col items-center p-3 rounded-2xl transition-all min-h-[64px]"
             style={{
-              background: selected === p.id ? (p.gradient || 'rgba(124,158,255,0.15)') : 'rgba(255,255,255,0.02)',
-              border: `1px solid ${selected === p.id ? (p.border || 'rgba(124,158,255,0.3)') : 'rgba(255,255,255,0.06)'}`,
+              background: selected === p.id ? (p.gradient || 'rgba(100,142,204,0.12)') : 'rgba(13,20,36,0.78)',
+              border: `1px solid ${selected === p.id ? (p.border || 'rgba(100,142,204,0.24)') : 'rgba(100,142,204,0.12)'}`,
               cursor: 'pointer',
             }}
             aria-pressed={selected === p.id}
           >
             {p.badge && (
-              <div className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[8px] font-black"
+              <div className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-black"
                 style={{
                   background: p.badgeBg || 'rgba(134,223,186,0.15)',
                   color: p.badgeColor || '#86dfba',
@@ -1630,7 +1632,7 @@ function ProviderSelector({ onSelect, selected, customBaseUrl, setCustomBaseUrl,
               {p.icon}
             </span>
             <span className="text-[10px] font-black text-center leading-tight"
-              style={{ color: selected === p.id ? '#e6ebf2' : '#9ba7b8' }}>
+              style={{ color: selected === p.id ? '#B7C6DC' : '#697B96' }}>
               {p.name}
             </span>
           </button>
@@ -1642,13 +1644,13 @@ function ProviderSelector({ onSelect, selected, customBaseUrl, setCustomBaseUrl,
           exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
           <div className="p-4 rounded-2xl mb-3"
             style={{ background: 'rgba(107,119,135,0.06)', border: '1px solid rgba(107,119,135,0.2)' }}>
-            <p className="text-[11px] font-black uppercase tracking-widest mb-2" style={{ color: '#9ba7b8' }}>
+            <p className="text-[11px] font-black uppercase tracking-widest mb-2" style={{ color: '#697B96' }}>
               API Base URL
             </p>
-            <p className="text-[11px] mb-3 leading-relaxed" style={{ color: '#9ba7b8' }}>
+            <p className="text-[11px] mb-3 leading-relaxed" style={{ color: '#697B96' }}>
               Any OpenAI-compatible LLM API URL.{' '}
               Example:{' '}
-              <span className="font-mono" style={{ color: '#7c9eff' }}>https://api.deepseek.com</span>
+              <span className="font-mono" style={{ color: '#5F8ECC' }}>https://api.deepseek.com</span>
             </p>
             <div className="flex space-x-2">
               <input
@@ -1657,7 +1659,7 @@ function ProviderSelector({ onSelect, selected, customBaseUrl, setCustomBaseUrl,
                 value={customBaseUrl}
                 onChange={e => setCustomBaseUrl(e.target.value)}
                 className="flex-1 atlas-input rounded-xl px-3 py-2.5 text-sm font-medium"
-                style={{ color: '#e6ebf2' }}
+                style={{ color: '#B7C6DC' }}
               />
               <motion.button
                 type="button"
@@ -1666,9 +1668,9 @@ function ProviderSelector({ onSelect, selected, customBaseUrl, setCustomBaseUrl,
                 whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                 className="px-4 py-2.5 rounded-xl text-xs font-bold disabled:opacity-40 min-h-[44px]"
                 style={{
-                  background: 'rgba(124,158,255,0.15)',
-                  border: '1px solid rgba(124,158,255,0.3)',
-                  color: '#7c9eff',
+                  background: 'rgba(100,142,204,0.12)',
+                  border: '1px solid rgba(100,142,204,0.24)',
+                  color: '#5F8ECC',
                 }}
               >
                 Verify
@@ -1720,32 +1722,32 @@ function VerifyBlock({ hook }) {
           initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
           exit={{ opacity: 0, height: 0 }} className="overflow-hidden mb-3">
           <div className="rounded-2xl p-4"
-            style={{ background: 'rgba(124,158,255,0.06)', border: '1px solid rgba(124,158,255,0.2)' }}>
+            style={{ background: 'rgba(100,142,204,0.06)', border: '1px solid rgba(100,142,204,0.16)' }}>
             <div className="flex items-center space-x-3 mb-3">
               <div className="relative w-8 h-8 flex-shrink-0">
                 <motion.div className="absolute inset-0 rounded-full border-2"
-                  style={{ borderColor: 'transparent', borderTopColor: '#7c9eff' }}
+                  style={{ borderColor: 'transparent', borderTopColor: '#5F8ECC' }}
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Shield className="w-3 h-3" style={{ color: '#7c9eff' }} />
+                  <Shield className="w-3 h-3" style={{ color: '#5F8ECC' }} />
                 </div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-black mb-0.5" style={{ color: '#e6ebf2' }}>Verifying API Key</p>
+                <p className="text-xs font-black mb-0.5" style={{ color: '#B7C6DC' }}>Verifying API Key</p>
                 <motion.p key={verifyLiveMsg || verifyPhase}
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                  className="text-[11px] font-mono truncate" style={{ color: '#7c9eff' }}>
+                  className="text-[11px] font-mono truncate" style={{ color: '#5F8ECC' }}>
                   {verifyLiveMsg || `${VERIFY_PHASES[verifyPhase]?.icon} ${VERIFY_PHASES[verifyPhase]?.label}`}
                 </motion.p>
               </div>
-              <span className="text-[11px] font-black flex-shrink-0" style={{ color: '#a78bfa' }}>
+              <span className="text-[11px] font-black flex-shrink-0" style={{ color: '#3D5F94' }}>
                 {Math.round(verifyProgress)}%
               </span>
             </div>
-            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(124,158,255,0.1)' }}>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(100,142,204,0.08)' }}>
               <motion.div className="h-full rounded-full"
-                style={{ background: 'linear-gradient(90deg,#7c9eff,#a78bfa)' }}
+                style={{ background: 'linear-gradient(90deg,#5F8ECC,#3D5F94)' }}
                 animate={{ width: `${verifyProgress}%` }}
                 transition={{ duration: 0.4 }} />
             </div>
@@ -1767,10 +1769,10 @@ function VerifyBlock({ hook }) {
             </motion.div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-black" style={{ color: '#86dfba' }}>Verified! Ready to launch.</p>
-              <p className="text-[11px] truncate" style={{ color: '#9ba7b8' }}>
+              <p className="text-[11px] truncate" style={{ color: '#697B96' }}>
                 {verifiedConfig.detectedName || detectedProv?.name || 'Provider'} · {verifiedConfig.model}
               </p>
-              <p className="text-[10px] font-mono truncate" style={{ color: '#64748b' }}
+              <p className="text-[10px] font-mono truncate" style={{ color: '#697B96' }}
                 title={formatHealthReportLine(buildAIHealthReport(verifiedConfig))}>
                 {formatHealthReportLine(buildAIHealthReport(verifiedConfig))}
               </p>
@@ -1779,15 +1781,15 @@ function VerifyBlock({ hook }) {
           </div>
           {availableModels.length > 0 && (
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: '#9ba7b8' }}>
+              <p className="text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: '#697B96' }}>
                 Select Model
               </p>
               <div className="relative">
                 <select value={selectedModel} onChange={e => setSelectedModel(e.target.value)}
                   className="w-full atlas-select text-sm font-bold rounded-xl px-3 py-2.5 pr-8"
-                  style={{ color: '#e6ebf2' }}>
+                  style={{ color: '#B7C6DC' }}>
                   {availableModels.map(m => (
-                    <option key={m} value={m} style={{ background: '#1a2028' }}>{m}</option>
+                    <option key={m} value={m} style={{ background: '#0D1424' }}>{m}</option>
                   ))}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none"
@@ -1830,7 +1832,7 @@ function VerifyBlock({ hook }) {
         <motion.div key="nu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           className="mb-3 p-3 rounded-2xl"
           style={{ background: 'rgba(107,119,135,0.06)', border: '1px solid rgba(107,119,135,0.2)' }}>
-          <p className="text-[11px] font-bold" style={{ color: '#9ba7b8' }}>
+          <p className="text-[11px] font-bold" style={{ color: '#697B96' }}>
             Enter your API base URL above and click Verify.
           </p>
         </motion.div>
@@ -1867,7 +1869,7 @@ function QuotePopup({ onDismiss }) {
         <div className="flex items-start space-x-3">
           <span className="text-xl flex-shrink-0" aria-hidden="true">💫</span>
           <div>
-            <p className="text-sm font-semibold leading-relaxed italic" style={{ color: '#e6ebf2' }}>
+            <p className="text-sm font-semibold leading-relaxed italic" style={{ color: '#B7C6DC' }}>
               "{quote.text}"
             </p>
             <p className="text-[11px] font-black mt-1" style={{ color: '#f0c987' }}>— {quote.author}</p>
@@ -1966,8 +1968,8 @@ function FloatingTimer({ focusMins, onFocusMinsChange }) {
     <div className="p-4 md:p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <Flame className="w-4 h-4" style={{ color: '#7c9eff' }} />
-          <span className="text-xs font-black uppercase tracking-wider" style={{ color: '#e6ebf2' }}>
+          <Flame className="w-4 h-4" style={{ color: '#5F8ECC' }} />
+          <span className="text-xs font-black uppercase tracking-wider" style={{ color: '#B7C6DC' }}>
             Focus Timer
           </span>
         </div>
@@ -1988,9 +1990,9 @@ function FloatingTimer({ focusMins, onFocusMinsChange }) {
       <div className="flex justify-center mb-4">
         <div className="relative w-28 h-28">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 90 90" aria-hidden="true">
-            <circle cx="45" cy="45" r="38" fill="none" stroke="rgba(124,158,255,0.08)" strokeWidth="6" />
+            <circle cx="45" cy="45" r="38" fill="none" stroke="rgba(100,142,204,0.07)" strokeWidth="6" />
             <motion.circle cx="45" cy="45" r="38" fill="none"
-              stroke={isDone ? '#86dfba' : running ? '#7c9eff' : 'rgba(124,158,255,0.4)'}
+              stroke={isDone ? '#86dfba' : running ? '#5F8ECC' : 'rgba(100,142,204,0.3)'}
               strokeWidth="6" strokeLinecap="round"
               strokeDasharray={`${2 * Math.PI * 38}`}
               strokeDashoffset={`${2 * Math.PI * 38 * (1 - pct / 100)}`}
@@ -2003,9 +2005,9 @@ function FloatingTimer({ focusMins, onFocusMinsChange }) {
               </motion.div>
             ) : (
               <>
-                <span className="font-black text-lg leading-none" style={{ color: '#e6ebf2' }}
+                <span className="font-black text-lg leading-none" style={{ color: '#B7C6DC' }}
                   aria-live="polite" aria-atomic="true">{timeStr}</span>
-                <span className="text-[9px] font-bold uppercase tracking-wider mt-0.5" style={{ color: '#7c9eff' }}>
+                <span className="text-[10px] font-bold uppercase tracking-wider mt-0.5" style={{ color: '#5F8ECC' }}>
                   {running ? 'FOCUS' : 'READY'}
                 </span>
               </>
@@ -2019,9 +2021,9 @@ function FloatingTimer({ focusMins, onFocusMinsChange }) {
           whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
           className="flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold min-h-[44px]"
           style={{
-            background: isDone ? 'rgba(134,223,186,0.15)' : running ? 'rgba(232,165,152,0.15)' : 'rgba(124,158,255,0.15)',
-            border: `1px solid ${isDone ? 'rgba(134,223,186,0.35)' : running ? 'rgba(232,165,152,0.35)' : 'rgba(124,158,255,0.35)'}`,
-            color: isDone ? '#86dfba' : running ? '#e8a598' : '#7c9eff',
+            background: isDone ? 'rgba(134,223,186,0.15)' : running ? 'rgba(232,165,152,0.15)' : 'rgba(100,142,204,0.12)',
+            border: `1px solid ${isDone ? 'rgba(134,223,186,0.35)' : running ? 'rgba(232,165,152,0.35)' : 'rgba(100,142,204,0.28)'}`,
+            color: isDone ? '#86dfba' : running ? '#e8a598' : '#5F8ECC',
           }}>
           {isDone ? <><RotateCcw className="w-3.5 h-3.5" /><span>Reset</span></>
             : running ? <><Pause className="w-3.5 h-3.5" /><span>Pause</span></>
@@ -2029,15 +2031,15 @@ function FloatingTimer({ focusMins, onFocusMinsChange }) {
         </motion.button>
         <button type="button" onClick={handleReset}
           className="p-2.5 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: '#6b7787' }}
+          style={{ background: 'rgba(19,27,45,0.94)', border: '1px solid rgba(100,142,204,0.12)', color: '#6b7787' }}
           aria-label="Reset timer">
           <RotateCcw className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      <div className="h-1.5 rounded-full overflow-hidden mb-3" style={{ background: 'rgba(124,158,255,0.1)' }}>
+      <div className="h-1.5 rounded-full overflow-hidden mb-3" style={{ background: 'rgba(100,142,204,0.08)' }}>
         <motion.div className="h-full rounded-full"
-          style={{ background: isDone ? 'linear-gradient(90deg,#86dfba,#c4e5d1)' : 'linear-gradient(90deg,#7c9eff,#a78bfa)' }}
+          style={{ background: isDone ? 'linear-gradient(90deg,#86dfba,rgba(134,223,186,0.12))' : 'linear-gradient(90deg,#5F8ECC,#3D5F94)' }}
           animate={{ width: `${pct}%` }} transition={{ duration: 1 }} />
       </div>
 
@@ -2046,14 +2048,14 @@ function FloatingTimer({ focusMins, onFocusMinsChange }) {
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
             <div className="p-3 rounded-xl mt-2"
-              style={{ background: 'rgba(124,158,255,0.06)', border: '1px solid rgba(124,158,255,0.12)' }}>
+              style={{ background: 'rgba(100,142,204,0.06)', border: '1px solid rgba(100,142,204,0.1)' }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold" style={{ color: '#9ba7b8' }}>Duration</span>
+                <span className="text-[11px] font-bold" style={{ color: '#697B96' }}>Duration</span>
                 <div className="flex items-center space-x-2">
                   <input type="range" min="5" max="120" step="5" value={focusMins}
                     onChange={e => onFocusMinsChange(Number(e.target.value))}
-                    className="w-24 h-1 accent-indigo-500" aria-label="Focus duration in minutes" />
-                  <span className="text-[11px] font-black w-8" style={{ color: '#7c9eff' }}>{focusMins}m</span>
+                    className="w-24 h-1 accent-[#5F8ECC]" aria-label="Focus duration in minutes" />
+                  <span className="text-[11px] font-black w-8" style={{ color: '#5F8ECC' }}>{focusMins}m</span>
                 </div>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -2061,9 +2063,9 @@ function FloatingTimer({ focusMins, onFocusMinsChange }) {
                   <button key={m} type="button" onClick={() => onFocusMinsChange(m)}
                     className="px-2 py-1 rounded-lg text-[10px] font-black transition-all min-h-[32px]"
                     style={{
-                      background: focusMins === m ? 'rgba(124,158,255,0.2)' : 'rgba(255,255,255,0.03)',
-                      border: `1px solid ${focusMins === m ? 'rgba(124,158,255,0.4)' : 'rgba(255,255,255,0.07)'}`,
-                      color: focusMins === m ? '#7c9eff' : '#6b7787',
+                      background: focusMins === m ? 'rgba(100,142,204,0.16)' : 'rgba(13,20,36,0.9)',
+                      border: `1px solid ${focusMins === m ? 'rgba(100,142,204,0.3)' : 'rgba(122,158,218,0.2)'}`,
+                      color: focusMins === m ? '#5F8ECC' : '#6b7787',
                     }}>
                     {m}m
                   </button>
@@ -2086,13 +2088,13 @@ function FloatingTimer({ focusMins, onFocusMinsChange }) {
             background: isDone
               ? 'linear-gradient(135deg,rgba(134,223,186,0.2),rgba(134,223,186,0.1))'
               : running
-                ? 'linear-gradient(135deg,rgba(124,158,255,0.25),rgba(167,139,250,0.2))'
+                ? 'linear-gradient(135deg,rgba(100,142,204,0.2),rgba(100,142,204,0.08))'
                 : 'rgba(26,32,40,0.9)',
-            border: `1px solid ${isDone ? 'rgba(134,223,186,0.4)' : running ? 'rgba(124,158,255,0.5)' : 'rgba(124,158,255,0.25)'}`,
+            border: `1px solid ${isDone ? 'rgba(134,223,186,0.4)' : running ? 'rgba(100,142,204,0.4)' : 'rgba(100,142,204,0.2)'}`,
             backdropFilter: 'blur(12px)',
-            color: isDone ? '#86dfba' : running ? '#7c9eff' : '#9ba7b8',
+            color: isDone ? '#86dfba' : running ? '#5F8ECC' : '#697B96',
             minHeight: '44px',
-            boxShadow: running ? '0 0 12px rgba(124,158,255,0.25)' : 'none',
+            boxShadow: running ? '0 0 12px rgba(100,142,204,0.2)' : 'none',
           }}
           aria-label={`Focus timer: ${pillLabel}`}>
           <Timer className="w-3.5 h-3.5" />
@@ -2119,17 +2121,17 @@ function FloatingTimer({ focusMins, onFocusMinsChange }) {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setShowTimer(false)}
               className="fixed inset-0 z-[7990] sm:hidden"
-              style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+              style={{ background: 'rgba(6,10,20,0.72)', backdropFilter: 'blur(4px)' }}
               aria-hidden="true" />
             <motion.div
               initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 300, damping: 35 }}
               className="fixed bottom-0 left-0 right-0 z-[7999] sm:hidden rounded-t-3xl overflow-hidden"
               style={{
-                background: '#1a2028',
-                border: '1px solid rgba(124,158,255,0.3)',
+                background: '#0D1424',
+                border: '1px solid rgba(100,142,204,0.24)',
                 borderBottom: 'none',
-                boxShadow: '0 -20px 60px rgba(124,158,255,0.15)',
+                boxShadow: '0 -20px 60px rgba(100,142,204,0.12)',
               }}
               role="dialog" aria-label="Focus timer">
               <div className="flex justify-center pt-3 pb-1">
@@ -2176,9 +2178,9 @@ function renderFlowchartSVG(raw) {
   const colors = {
     start:    { fill: 'rgba(134,223,186,0.18)', stroke: '#86dfba', text: '#86dfba' },
     end:      { fill: 'rgba(232,165,152,0.18)', stroke: '#e8a598', text: '#e8a598' },
-    process:  { fill: 'rgba(124,158,255,0.18)', stroke: '#7c9eff', text: '#7c9eff' },
+    process:  { fill: 'rgba(100,142,204,0.14)', stroke: '#5F8ECC', text: '#5F8ECC' },
     decision: { fill: 'rgba(240,201,135,0.18)', stroke: '#f0c987', text: '#f0c987' },
-    io:       { fill: 'rgba(167,139,250,0.18)', stroke: '#a78bfa', text: '#c4b5fd' },
+    io:       { fill: 'rgba(100,142,204,0.16)', stroke: '#3D5F94', text: '#5F8ECC' },
   };
 
   const elems = [];
@@ -2193,10 +2195,10 @@ function renderFlowchartSVG(raw) {
       elems.push(
         <g key={`arrow-${i}`}>
           <line x1={cx} y1={y} x2={cx} y2={y + ARROW_GAP - 6}
-            stroke="rgba(124,158,255,0.6)" strokeWidth="1.5" />
+            stroke="rgba(100,142,204,0.42)" strokeWidth="1.5" />
           <polygon
             points={`${cx-4},${y+ARROW_GAP-10} ${cx},${y+ARROW_GAP-3} ${cx+4},${y+ARROW_GAP-10}`}
-            fill="rgba(124,158,255,0.7)" />
+            fill="rgba(100,142,204,0.6)" />
         </g>
       );
       y += ARROW_GAP;
@@ -2255,9 +2257,9 @@ function renderFlowchartSVG(raw) {
   return (
     <div className="my-3 flex justify-center">
       <div className="rounded-2xl p-4"
-        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(124,158,255,0.2)' }}>
+        style={{ background: '#0D1424', border: '1px solid rgba(100,142,204,0.16)' }}>
         <p className="text-[10px] font-black uppercase tracking-widest text-center mb-3"
-          style={{ color: '#7c9eff' }}>FLOWCHART</p>
+          style={{ color: '#5F8ECC' }}>FLOWCHART</p>
         <svg width={SVG_W} height={y+20} viewBox={`0 0 ${SVG_W} ${y+20}`}
           xmlns="http://www.w3.org/2000/svg" style={{ maxWidth: '100%' }}
           role="img" aria-label="Flowchart diagram">
@@ -2276,9 +2278,9 @@ function renderBlockDiagramSVG(raw) {
   return (
     <div className="my-3 flex justify-center overflow-x-auto">
       <div className="rounded-2xl p-3"
-        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(124,158,255,0.2)' }}>
+        style={{ background: '#0D1424', border: '1px solid rgba(100,142,204,0.16)' }}>
         <p className="text-[10px] font-black uppercase tracking-widest text-center mb-2"
-          style={{ color: '#7c9eff' }}>BLOCK DIAGRAM</p>
+          style={{ color: '#5F8ECC' }}>BLOCK DIAGRAM</p>
         <svg width={Math.max(SVG_W, 280)} height={BOX_H + 80}
           xmlns="http://www.w3.org/2000/svg" style={{ maxWidth: '100%' }}
           role="img" aria-label="Block diagram">
@@ -2293,15 +2295,15 @@ function renderBlockDiagramSVG(raw) {
                 {i > 0 && (
                   <g>
                     <line x1={x-GAP+4} y1={by} x2={x-6} y2={by}
-                      stroke="rgba(124,158,255,0.5)" strokeWidth="1.5" />
+                      stroke="rgba(100,142,204,0.4)" strokeWidth="1.5" />
                     <polygon points={`${x-10},${by-3} ${x-3},${by} ${x-10},${by+3}`}
-                      fill="rgba(124,158,255,0.7)" />
+                      fill="rgba(100,142,204,0.6)" />
                   </g>
                 )}
                 <rect x={x} y={y} width={BOX_W} height={BOX_H} rx="6"
-                  fill="rgba(124,158,255,0.12)" stroke="rgba(124,158,255,0.4)" strokeWidth="1.5" />
+                  fill="rgba(100,142,204,0.1)" stroke="rgba(100,142,204,0.3)" strokeWidth="1.5" />
                 <text x={bx} y={by} textAnchor="middle" dominantBaseline="middle"
-                  fill="#a78bfa" fontSize="10" fontWeight="700" fontFamily="system-ui">{safe}</text>
+                  fill="#3D5F94" fontSize="10" fontWeight="700" fontFamily="system-ui">{safe}</text>
               </g>
             );
           })}
@@ -2328,8 +2330,8 @@ function renderDrawingSVG(raw) {
     });
   }
 
-  const STROKE = '#a78bfa', STROKE_DIM = '#7c9eff', FILL = 'rgba(124,158,255,0.07)';
-  const TEXT_COLOR = '#e6ebf2', DIM_COLOR = '#a5b4fc';
+  const STROKE = '#3D5F94', STROKE_DIM = '#5F8ECC', FILL = 'rgba(100,142,204,0.07)';
+  const TEXT_COLOR = '#B7C6DC', DIM_COLOR = '#9BB9E0';
 
   let svgContent = null, svgW = 500, svgH = 320;
 
@@ -2355,10 +2357,10 @@ function renderDrawingSVG(raw) {
         <text x={tvX+sw/2} y={tvY-10} textAnchor="middle" fill={TEXT_COLOR} fontSize="12" fontWeight="700">TOP VIEW</text>
         <line x1={tvX+sw+18} y1={tvY} x2={tvX+sw+18} y2={tvY+sd} stroke={STROKE_DIM} strokeWidth="1" />
         <text x={tvX+sw+34} y={tvY+sd/2} textAnchor="middle" fill={DIM_COLOR} fontSize="10" fontWeight="700">{D}</text>
-        <line x1={fvX+sw} y1={fvY}    x2={svX}    y2={svY}    stroke="rgba(124,158,255,0.2)" strokeWidth="0.8" strokeDasharray="4,3" />
-        <line x1={fvX+sw} y1={fvY+sh} x2={svX}    y2={svY+sh} stroke="rgba(124,158,255,0.2)" strokeWidth="0.8" strokeDasharray="4,3" />
-        <line x1={fvX}    y1={fvY+sh} x2={tvX}    y2={tvY}    stroke="rgba(124,158,255,0.2)" strokeWidth="0.8" strokeDasharray="4,3" />
-        <line x1={fvX+sw} y1={fvY+sh} x2={tvX+sw} y2={tvY}    stroke="rgba(124,158,255,0.2)" strokeWidth="0.8" strokeDasharray="4,3" />
+        <line x1={fvX+sw} y1={fvY}    x2={svX}    y2={svY}    stroke="rgba(100,142,204,0.16)" strokeWidth="0.8" strokeDasharray="4,3" />
+        <line x1={fvX+sw} y1={fvY+sh} x2={svX}    y2={svY+sh} stroke="rgba(100,142,204,0.16)" strokeWidth="0.8" strokeDasharray="4,3" />
+        <line x1={fvX}    y1={fvY+sh} x2={tvX}    y2={tvY}    stroke="rgba(100,142,204,0.16)" strokeWidth="0.8" strokeDasharray="4,3" />
+        <line x1={fvX+sw} y1={fvY+sh} x2={tvX+sw} y2={tvY}    stroke="rgba(100,142,204,0.16)" strokeWidth="0.8" strokeDasharray="4,3" />
       </>
     );
   } else if (type === 'isometric') {
@@ -2370,9 +2372,9 @@ function renderDrawingSVG(raw) {
     const rightP= [[isoC,isoY],[isoC+iW,isoY+iW*0.5],[isoC+iW,isoY+iW*0.5+iH],[isoC,isoY+iH]].map(p=>p.join(',')).join(' ');
     svgContent = (
       <>
-        <polygon points={topP}   fill="rgba(124,158,255,0.12)" stroke={STROKE} strokeWidth="1.5" />
-        <polygon points={leftP}  fill="rgba(124,158,255,0.07)" stroke={STROKE} strokeWidth="1.5" />
-        <polygon points={rightP} fill="rgba(167,139,250,0.09)" stroke={STROKE} strokeWidth="1.5" />
+        <polygon points={topP}   fill="rgba(100,142,204,0.1)" stroke={STROKE} strokeWidth="1.5" />
+        <polygon points={leftP}  fill="rgba(100,142,204,0.07)" stroke={STROKE} strokeWidth="1.5" />
+        <polygon points={rightP} fill="rgba(100,142,204,0.07)" stroke={STROKE} strokeWidth="1.5" />
         <text x={isoC+iW/2+8}  y={isoY+iW*0.25-8}       fill={DIM_COLOR} fontSize="11" fontWeight="700">{W}</text>
         <text x={isoC-iD/2-20} y={isoY+iD*0.25+4}       fill={DIM_COLOR} fontSize="11" fontWeight="700">{D}</text>
         <text x={isoC+iW+6}    y={isoY+iW*0.5+iH/2}     fill={DIM_COLOR} fontSize="11" fontWeight="700">{H}</text>
@@ -2396,12 +2398,12 @@ function renderDrawingSVG(raw) {
   return (
     <div className="my-4">
       <div className="rounded-2xl overflow-hidden"
-        style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(124,158,255,0.25)' }}>
+        style={{ background: 'rgba(100,142,204,0.05)', border: '1px solid rgba(100,142,204,0.2)' }}>
         <div className="px-4 py-2.5 flex items-center justify-between"
-          style={{ background: 'rgba(124,158,255,0.1)', borderBottom: '1px solid rgba(124,158,255,0.2)' }}>
+          style={{ background: 'rgba(100,142,204,0.08)', borderBottom: '1px solid rgba(100,142,204,0.16)' }}>
           <div className="flex items-center space-x-2">
-            <span style={{ color: '#7c9eff' }} aria-hidden="true">📐</span>
-            <span className="text-[11px] font-black uppercase tracking-widest" style={{ color: '#a78bfa' }}>
+            <span style={{ color: '#5F8ECC' }} aria-hidden="true">📐</span>
+            <span className="text-[11px] font-black uppercase tracking-widest" style={{ color: '#3D5F94' }}>
               Engineering Drawing
             </span>
           </div>
@@ -2416,18 +2418,18 @@ function renderDrawingSVG(raw) {
         </div>
         {marksBreakdown.length > 0 && (
           <div className="px-4 pb-4">
-            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(124,158,255,0.2)' }}>
+            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(100,142,204,0.16)' }}>
               <div className="px-3 py-1.5"
-                style={{ background: 'rgba(124,158,255,0.08)', borderBottom: '1px solid rgba(124,158,255,0.15)' }}>
-                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#7c9eff' }}>
+                style={{ background: 'rgba(100,142,204,0.07)', borderBottom: '1px solid rgba(100,142,204,0.12)' }}>
+                <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#5F8ECC' }}>
                   Mark Scheme
                 </span>
               </div>
-              <div className="divide-y" style={{ borderColor: 'rgba(124,158,255,0.1)' }}>
+              <div className="divide-y" style={{ borderColor: 'rgba(100,142,204,0.08)' }}>
                 {marksBreakdown.map((m, i) => (
                   <div key={i} className="flex items-center justify-between px-3 py-2">
-                    <span className="text-[12px] font-medium" style={{ color: '#e6ebf2' }}>{m.label}</span>
-                    <span className="text-[12px] font-black" style={{ color: '#a78bfa' }}>{m.marks}m</span>
+                    <span className="text-[12px] font-medium" style={{ color: '#B7C6DC' }}>{m.label}</span>
+                    <span className="text-[12px] font-black" style={{ color: '#3D5F94' }}>{m.marks}m</span>
                   </div>
                 ))}
               </div>
@@ -2462,6 +2464,7 @@ function formatInline(text) {
 
 function contentToMarkdown(content) {
   return String(content || '')
+    .replace(/\[EXACTFIGURE:\s*.*?\]/gs, '[Exact figure]')
     .replace(/\[FLOWCHART:.*?\]/gs,    '[Flowchart diagram]')
     .replace(/\[BLOCKDIAGRAM:.*?\]/gs, '[Block diagram]')
     .replace(/\[DRAWING:.*?\]/gs,      '[Engineering drawing]');
@@ -2505,10 +2508,10 @@ function AIResultRenderer({ content, questionData = null, onBookmark = null, isB
         const escapedCode = codeLines.map(escapeHTML).join('\n');
         rendered.push(
           <div key={key++} className="my-3 rounded-xl overflow-hidden"
-            style={{ background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(124,158,255,0.2)' }}>
+            style={{ background: 'rgba(100,142,204,0.05)', border: '1px solid rgba(100,142,204,0.16)' }}>
             <div className="flex items-center justify-between px-3 py-1.5"
-              style={{ background: 'rgba(124,158,255,0.08)', borderBottom: '1px solid rgba(124,158,255,0.15)' }}>
-              <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#7c9eff' }}>
+              style={{ background: 'rgba(100,142,204,0.07)', borderBottom: '1px solid rgba(100,142,204,0.12)' }}>
+              <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: '#5F8ECC' }}>
                 {codeLang || 'CODE'}
               </span>
               <span className="text-[10px]" style={{ color: '#6b7787' }}>{codeLines.length} lines</span>
@@ -2531,6 +2534,10 @@ function AIResultRenderer({ content, questionData = null, onBookmark = null, isB
       rendered.push(<React.Fragment key={key++}>{renderFlowchartSVG(t.slice(11, -1).trim())}</React.Fragment>);
       continue;
     }
+    if (t.startsWith('[EXACTFIGURE:') && t.endsWith(']')) {
+      rendered.push(<React.Fragment key={key++}><ExactFigureRenderer id={t.slice(13, -1).trim()} /></React.Fragment>);
+      continue;
+    }
     if (t.startsWith('[BLOCKDIAGRAM:') && t.endsWith(']')) {
       rendered.push(<React.Fragment key={key++}>{renderBlockDiagramSVG(t.slice(14, -1).trim())}</React.Fragment>);
       continue;
@@ -2543,7 +2550,7 @@ function AIResultRenderer({ content, questionData = null, onBookmark = null, isB
     if (t.startsWith('# ')) {
       rendered.push(
         <h2 key={key++} className="text-xl font-black mt-4 mb-2"
-          style={{ background: 'linear-gradient(135deg,#7c9eff,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          style={{ background: 'linear-gradient(135deg,#3F6FB0,#2B4E80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           {t.slice(2)}
         </h2>
       );
@@ -2552,22 +2559,22 @@ function AIResultRenderer({ content, questionData = null, onBookmark = null, isB
     if (t.startsWith('## ')) {
       rendered.push(
         <div key={key++} className="flex items-center space-x-2 mt-4 mb-1.5">
-          <div className="w-1 h-1 rounded-full" style={{ background: '#7c9eff' }} />
-          <h3 className="text-sm font-bold uppercase tracking-wide" style={{ color: '#7c9eff' }}>{t.slice(3)}</h3>
+          <div className="w-1 h-1 rounded-full" style={{ background: '#5F8ECC' }} />
+          <h3 className="text-sm font-bold uppercase tracking-wide" style={{ color: '#5F8ECC' }}>{t.slice(3)}</h3>
         </div>
       );
       continue;
     }
     if (t.startsWith('### ')) {
-      rendered.push(<h4 key={key++} className="text-sm font-bold mt-3 mb-1" style={{ color: '#c4b5fd' }}>{t.slice(4)}</h4>);
+      rendered.push(<h4 key={key++} className="text-sm font-bold mt-3 mb-1" style={{ color: '#5F8ECC' }}>{t.slice(4)}</h4>);
       continue;
     }
 
     if (t.startsWith('- ') || t.startsWith('* ')) {
       rendered.push(
         <div key={key++} className="flex items-start space-x-2 py-0.5">
-          <div className="mt-2 w-1 h-1 rounded-full flex-shrink-0" style={{ background: 'rgba(124,158,255,0.7)' }} />
-          <p className="text-sm leading-relaxed" style={{ color: '#e6ebf2' }}
+          <div className="mt-2 w-1 h-1 rounded-full flex-shrink-0" style={{ background: 'rgba(100,142,204,0.6)' }} />
+          <p className="text-sm leading-relaxed" style={{ color: '#B7C6DC' }}
             dangerouslySetInnerHTML={{ __html: formatInline(t.slice(2)) }} />
         </div>
       );
@@ -2580,10 +2587,10 @@ function AIResultRenderer({ content, questionData = null, onBookmark = null, isB
       rendered.push(
         <div key={key++} className="flex items-start space-x-2 py-0.5">
           <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center"
-            style={{ background: 'rgba(124,158,255,0.15)', border: '1px solid rgba(124,158,255,0.3)', color: '#7c9eff' }}>
+            style={{ background: 'rgba(100,142,204,0.12)', border: '1px solid rgba(100,142,204,0.24)', color: '#5F8ECC' }}>
             {num}
           </span>
-          <p className="text-sm leading-relaxed" style={{ color: '#e6ebf2' }}
+          <p className="text-sm leading-relaxed" style={{ color: '#B7C6DC' }}
             dangerouslySetInnerHTML={{ __html: formatInline(text) }} />
         </div>
       );
@@ -2592,7 +2599,7 @@ function AIResultRenderer({ content, questionData = null, onBookmark = null, isB
 
     if (t === '---') {
       rendered.push(<div key={key++} className="h-px my-3"
-        style={{ background: 'linear-gradient(90deg,transparent,rgba(124,158,255,0.2),transparent)' }} />);
+        style={{ background: 'linear-gradient(90deg,transparent,rgba(100,142,204,0.16),transparent)' }} />);
       continue;
     }
 
@@ -2600,9 +2607,9 @@ function AIResultRenderer({ content, questionData = null, onBookmark = null, isB
       const cells = t.slice(1, -1).split('|').map(c => c.trim());
       if (cells.every(c => /^[-: ]+$/.test(c))) continue;
       rendered.push(
-        <div key={key++} className="flex gap-2 py-1 text-sm border-b" style={{ borderColor: 'rgba(124,158,255,0.1)' }}>
+        <div key={key++} className="flex gap-2 py-1 text-sm border-b" style={{ borderColor: 'rgba(100,142,204,0.08)' }}>
           {cells.map((cell, ci) => (
-            <div key={ci} className="flex-1 min-w-0" style={{ color: '#e6ebf2' }}
+            <div key={ci} className="flex-1 min-w-0" style={{ color: '#B7C6DC' }}
               dangerouslySetInnerHTML={{ __html: formatInline(cell) }} />
           ))}
         </div>
@@ -2611,7 +2618,7 @@ function AIResultRenderer({ content, questionData = null, onBookmark = null, isB
     }
 
     rendered.push(
-      <p key={key++} className="text-sm leading-relaxed py-0.5" style={{ color: '#e6ebf2' }}
+      <p key={key++} className="text-sm leading-relaxed py-0.5" style={{ color: '#B7C6DC' }}
         dangerouslySetInnerHTML={{ __html: formatInline(t) }} />
     );
   }
@@ -2626,13 +2633,13 @@ function AIResultRenderer({ content, questionData = null, onBookmark = null, isB
         {actionsVisible && (
           <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="mt-3 pt-3 flex items-center gap-2 flex-wrap no-print"
-            style={{ borderTop: '1px dashed rgba(124,158,255,0.15)' }}>
+            style={{ borderTop: '1px dashed rgba(100,142,204,0.12)' }}>
             <button type="button" onClick={handleCopy}
               className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all"
               style={{
-                background: copied ? 'rgba(134,223,186,0.15)' : 'rgba(124,158,255,0.08)',
-                border: `1px solid ${copied ? 'rgba(134,223,186,0.3)' : 'rgba(124,158,255,0.2)'}`,
-                color: copied ? '#86dfba' : '#7c9eff',
+                background: copied ? 'rgba(134,223,186,0.15)' : 'rgba(100,142,204,0.07)',
+                border: `1px solid ${copied ? 'rgba(134,223,186,0.3)' : 'rgba(100,142,204,0.16)'}`,
+                color: copied ? '#86dfba' : '#5F8ECC',
               }}
               aria-label="Copy answer as notes">
               {copied ? <><Check className="w-3 h-3" /><span>Copied!</span></> : <><Copy className="w-3 h-3" /><span>Copy as Notes</span></>}
@@ -2641,9 +2648,9 @@ function AIResultRenderer({ content, questionData = null, onBookmark = null, isB
               <button type="button" onClick={() => onBookmark(questionData)}
                 className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all"
                 style={{
-                  background: isBookmarked ? 'rgba(240,201,135,0.15)' : 'rgba(124,158,255,0.08)',
-                  border: `1px solid ${isBookmarked ? 'rgba(240,201,135,0.3)' : 'rgba(124,158,255,0.2)'}`,
-                  color: isBookmarked ? '#f0c987' : '#7c9eff',
+                  background: isBookmarked ? 'rgba(240,201,135,0.15)' : 'rgba(100,142,204,0.07)',
+                  border: `1px solid ${isBookmarked ? 'rgba(240,201,135,0.3)' : 'rgba(100,142,204,0.16)'}`,
+                  color: isBookmarked ? '#f0c987' : '#5F8ECC',
                 }}
                 aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark this question'}>
                 <Bookmark className={`w-3 h-3 ${isBookmarked ? 'fill-current' : ''}`} />
@@ -2682,29 +2689,29 @@ function AnswerLoadingInline() {
     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }} className="overflow-hidden mt-3">
       <div className="rounded-2xl p-4"
-        style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(124,158,255,0.2)' }}>
+        style={{ background: '#0D1424', border: '1px solid rgba(100,142,204,0.16)' }}>
         <div className="flex items-center space-x-3 mb-4">
           <div className="relative w-10 h-10 flex-shrink-0">
             <motion.div className="absolute inset-0 rounded-full border-2"
-              style={{ borderColor: 'transparent', borderTopColor: '#7c9eff', borderRightColor: 'rgba(124,158,255,0.2)' }}
+              style={{ borderColor: 'transparent', borderTopColor: '#5F8ECC', borderRightColor: 'rgba(100,142,204,0.16)' }}
               animate={{ rotate: 360 }} transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }} />
             <div className="absolute inset-0 flex items-center justify-center">
-              <Brain className="w-4 h-4" style={{ color: '#7c9eff' }} />
+              <Brain className="w-4 h-4" style={{ color: '#5F8ECC' }} />
             </div>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-black mb-0.5" style={{ color: '#e6ebf2' }}>Preparing your answer</p>
+            <p className="text-[11px] font-black mb-0.5" style={{ color: '#B7C6DC' }}>Preparing your answer</p>
             <motion.p key={phase} initial={{ opacity: 0, x: -5 }} animate={{ opacity: 1, x: 0 }}
-              className="text-[11px] font-medium leading-relaxed truncate" style={{ color: '#7c9eff' }}>
+              className="text-[11px] font-medium leading-relaxed truncate" style={{ color: '#5F8ECC' }}>
               {current.icon} {current.label}
             </motion.p>
           </div>
-          <span className="text-[11px] font-black flex-shrink-0" style={{ color: '#a78bfa' }}
+          <span className="text-[11px] font-black flex-shrink-0" style={{ color: '#3D5F94' }}
             aria-live="polite" aria-atomic="true">{progress}%</span>
         </div>
-        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(124,158,255,0.1)' }}>
+        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(100,142,204,0.08)' }}>
           <motion.div className="h-full rounded-full"
-            style={{ background: 'linear-gradient(90deg,#7c9eff,#a78bfa,#c4b5fd)' }}
+            style={{ background: 'linear-gradient(90deg,#5F8ECC,#3D5F94)' }}
             animate={{ width: `${progress}%` }} transition={{ duration: 0.3 }} />
         </div>
       </div>
@@ -2850,15 +2857,15 @@ TUTOR:`;
 
   const chatUI = (
     <>
-      <div className="flex items-center justify-between px-4 md:px-5 py-3.5 flex-shrink-0"
-        style={{ background: 'linear-gradient(135deg,rgba(124,158,255,0.15),rgba(167,139,250,0.1))', borderBottom: '1px solid rgba(124,158,255,0.2)' }}>
-        <div className="flex items-center space-x-3">
-          <div className="p-2 rounded-xl" style={{ background: 'rgba(124,158,255,0.2)' }}>
-            <Bot className="w-4 h-4" style={{ color: '#7c9eff' }} />
-          </div>
-          <div>
-            <p className="text-sm font-black" style={{ color: '#e6ebf2' }}>AI Tutor</p>
-            <p className="text-[11px] font-medium" style={{ color: '#7c9eff' }}>
+<div className="flex items-center justify-between px-4 md:px-5 py-3.5 flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg,rgba(100,142,204,0.1),rgba(100,142,204,0.04))', borderBottom: '1px solid rgba(100,142,204,0.14)' }}>
+            <div className="flex items-center space-x-3">
+              <div className="p-2 rounded-xl" style={{ background: 'rgba(100,142,204,0.16)' }}>
+                <Bot className="w-4 h-4" style={{ color: '#5F8ECC' }} />
+              </div>
+              <div>
+                <p className="text-sm font-black" style={{ color: '#E7ECF5' }}>AI Tutor</p>
+                <p className="text-[11px] font-medium" style={{ color: '#8B9CB5' }}>
               {subject?.split('-')[0]?.trim() || 'Subject'} · {isDrawing ? 'Drawing mode' : isCoding ? 'Code mode' : 'Concept mode'}
             </p>
           </div>
@@ -2872,13 +2879,13 @@ TUTOR:`;
           </motion.div>
           <button type="button" onClick={handleClearChat}
             className="p-2 rounded-xl min-h-[36px] min-w-[36px] flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.05)', color: '#9ba7b8' }}
+            style={{ background: '#0D1424', color: '#697B96' }}
             aria-label="Clear conversation" title="Clear conversation">
             <Trash2 className="w-3.5 h-3.5" />
           </button>
           <button type="button" onClick={onClose}
             className="p-2 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.05)', color: '#9ba7b8' }} aria-label="Close chatbot">
+            style={{ background: '#0D1424', color: '#697B96' }} aria-label="Close chatbot">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -2890,16 +2897,16 @@ TUTOR:`;
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.role === 'assistant' && (
               <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 mr-2 mt-0.5"
-                style={{ background: 'rgba(124,158,255,0.2)', border: '1px solid rgba(124,158,255,0.3)' }}>
-                <Bot className="w-3.5 h-3.5" style={{ color: '#7c9eff' }} />
+                style={{ background: 'rgba(100,142,204,0.16)', border: '1px solid rgba(100,142,204,0.24)' }}>
+                <Bot className="w-3.5 h-3.5" style={{ color: '#5F8ECC' }} />
               </div>
             )}
             <div className="rounded-2xl px-4 py-3"
               style={{
                 maxWidth: '85%', wordBreak: 'break-word', overflowWrap: 'break-word',
                 ...(msg.role === 'user'
-                  ? { background: 'linear-gradient(135deg,#7c9eff,#a78bfa)', borderTopRightRadius: 4 }
-                  : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderTopLeftRadius: 4 }),
+                  ? { background: 'linear-gradient(135deg,#3F6FB0,#2B4E80)', borderTopRightRadius: 4 }
+                  : { background: 'rgba(19,27,45,0.94)', border: '1px solid rgba(100,142,204,0.14)', borderTopLeftRadius: 4 }),
               }}>
               {msg.role === 'assistant'
                 ? <div className="text-sm"><AIResultRenderer content={msg.content} /></div>
@@ -2907,8 +2914,8 @@ TUTOR:`;
             </div>
             {msg.role === 'user' && (
               <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 ml-2 mt-0.5"
-                style={{ background: 'rgba(124,158,255,0.15)', border: '1px solid rgba(124,158,255,0.2)' }}>
-                <User className="w-3.5 h-3.5" style={{ color: '#c4b5fd' }} />
+                style={{ background: 'rgba(100,142,204,0.12)', border: '1px solid rgba(100,142,204,0.16)' }}>
+                <User className="w-3.5 h-3.5" style={{ color: '#5F8ECC' }} />
               </div>
             )}
           </motion.div>
@@ -2916,15 +2923,15 @@ TUTOR:`;
         {isTyping && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
             <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 mr-2"
-              style={{ background: 'rgba(124,158,255,0.2)' }}>
-              <Bot className="w-3.5 h-3.5" style={{ color: '#7c9eff' }} />
+              style={{ background: 'rgba(100,142,204,0.16)' }}>
+              <Bot className="w-3.5 h-3.5" style={{ color: '#5F8ECC' }} />
             </div>
             <div className="px-4 py-3 rounded-2xl"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+              style={{ background: 'rgba(19,27,45,0.94)', border: '1px solid rgba(100,142,204,0.14)' }}
               aria-label="AI is typing">
               <div className="flex space-x-1">
                 {[0, 1, 2].map(i => (
-                  <motion.div key={i} className="w-2 h-2 rounded-full" style={{ background: '#7c9eff' }}
+                  <motion.div key={i} className="w-2 h-2 rounded-full" style={{ background: '#5F8ECC' }}
                     animate={{ y: [0, -5, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }} />
                 ))}
               </div>
@@ -2934,20 +2941,23 @@ TUTOR:`;
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-3 flex-shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="p-3 flex-shrink-0" style={{ borderTop: '1px solid rgba(100,142,204,0.12)' }}>
         <div className="flex items-end space-x-2">
           <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown}
             placeholder={isDrawing ? 'Ask about any drawing...' : isCoding ? 'Ask for code or algorithm...' : 'Ask your doubt...'}
             rows={2} maxLength={2000}
             className="flex-1 atlas-input rounded-2xl px-3 py-2.5 text-sm font-medium resize-none"
-            style={{ minHeight: '44px', maxHeight: '100px', color: '#e6ebf2' }} aria-label="Chat input" />
+            style={{ minHeight: '44px', maxHeight: '100px', color: '#E7ECF5' }} aria-label="Chat input" />
           <motion.button type="button" onClick={handleSend} disabled={!input.trim() || isTyping}
             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
             className="p-2.5 rounded-2xl flex-shrink-0 disabled:opacity-40 min-h-[44px] min-w-[44px] flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg,#7c9eff,#a78bfa)' }} aria-label="Send message">
+            style={{ background: 'linear-gradient(135deg,#3F6FB0,#2B4E80)' }} aria-label="Send message">
             <Send className="w-4 h-4" style={{ color: '#ffffff' }} />
           </motion.button>
         </div>
+        <p className="text-center text-[10px] font-medium mt-2" style={{ color: '#697B96' }}>
+          Answers grounded in this subject's on-device KTU syllabus, formulas & PYQs
+        </p>
       </div>
     </>
   );
@@ -2960,7 +2970,7 @@ TUTOR:`;
             initial={{ opacity: 0, y: '100%' }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: '100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 35 }}
             className="fixed inset-0 z-[9999] flex flex-col sm:hidden"
-            style={{ background: '#0f1419' }} role="dialog" aria-label="AI Tutor chat">
+            style={{ background: '#0A1020' }} role="dialog" aria-label="AI Tutor chat">
             {chatUI}
           </motion.div>
           <motion.div key="chatbot-desktop"
@@ -2968,7 +2978,7 @@ TUTOR:`;
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             className="fixed bottom-4 right-4 z-[9999] hidden sm:flex flex-col rounded-3xl overflow-hidden shadow-2xl"
-            style={{ background: '#1a2028', border: '1px solid rgba(124,158,255,0.3)', width: 'min(420px, calc(100vw - 32px))', height: '580px' }}
+            style={{ background: '#0D1424', border: '1px solid rgba(100,142,204,0.24)', width: 'min(420px, calc(100vw - 32px))', height: '580px' }}
             role="dialog" aria-label="AI Tutor chat">
             {chatUI}
           </motion.div>
@@ -2996,6 +3006,7 @@ function QuestionCard({ question, isStudied, onToggle, onAskChatbot, subject, sc
   const isCoding  = useMemo(() => isCodingSubject(subject),  [subject]);
   const isDrawing = useMemo(() => isDrawingSubject(subject), [subject]);
   const isDrawQ   = useMemo(() => isDrawing && isDrawingQuestion(question.text), [isDrawing, question.text]);
+  const exactFigure = useMemo(() => resolveExactFigure(question.text), [question.text]);
 
   useEffect(() => () => { abortRef.current = true; }, []);
 
@@ -3040,7 +3051,9 @@ Output the [DRAWING:] line now:`;
       const needsDiagram   = /draw|diagram|sketch|illustrate|represent/i.test(question.text) && !needsFlowchart && !needsBlockDiag;
 
       let diagramInstruction = '';
-      if (needsFlowchart) {
+      if (exactFigure) {
+        diagramInstruction = `\nThe EXACT source figure for this question is already displayed from the ATLAS figure library.\nDo NOT generate any [FLOWCHART:], [BLOCKDIAGRAM:], or [DRAWING:] line.\nWrite the explanation and caption for the figure only.`;
+      } else if (needsFlowchart) {
         diagramInstruction = `\nFLOWCHART IS MANDATORY. Include on its OWN line:\n[FLOWCHART: Start(start) > ReadInput(io) > ProcessData(process) > IsValid?(decision) > OutputResult(io) > End(end)]\nRules: Start with [FLOWCHART:, end with ]. Steps separated by >. Types: start/end/process/decision/io. 5-8 steps. Names under 18 chars.`;
       } else if (needsBlockDiag) {
         diagramInstruction = `\nBLOCK DIAGRAM IS MANDATORY. Include on its OWN line:\n[BLOCKDIAGRAM: Block1 > Block2 > Block3 > Block4]\nRules: 3-6 blocks, names under 12 chars.`;
@@ -3070,7 +3083,7 @@ Write the complete KTU model answer now:`;
     try {
       const ans = await callAI(prompt);
       if (abortRef.current) return;
-      answerRef.current = ans;
+      answerRef.current = exactFigure ? `[EXACTFIGURE: ${exactFigure.id}]\n\n${ans}` : ans;
       setAnswerKey(k => k + 1);
       setExpanded(true);
     } catch (err) {
@@ -3079,7 +3092,7 @@ Write the complete KTU model answer now:`;
     } finally {
       if (!abortRef.current) setLoading(false);
     }
-  }, [expanded, callAI, subject, scheme, question, isDrawQ, isCoding]);
+  }, [expanded, callAI, subject, scheme, question, isDrawQ, isCoding, exactFigure]);
 
   const handleRetry = useCallback(() => {
     answerRef.current = '';
@@ -3109,8 +3122,8 @@ Write the complete KTU model answer now:`;
       <div className="p-4">
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center space-x-2">
-            {question.module && <span className="text-[11px] font-black uppercase tracking-wider" style={{ color: '#94a3b8' }}>M{question.module}</span>}
-            {isDrawQ && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(167,139,250,0.12)', color: '#c4b5fd', border: '1px solid rgba(167,139,250,0.25)' }}>📐 DRAWING</span>}
+            {question.module && <span className="text-[11px] font-black uppercase tracking-wider" style={{ color: '#8B9CB5' }}>M{question.module}</span>}
+            {isDrawQ && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(123,167,222,0.08)', color: '#7BA7DE', border: '1px solid rgba(123,167,222,0.28)' }}>📐 DRAWING</span>}
             {isBookmarked && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full flex items-center gap-1" style={{ background: 'rgba(240,201,135,0.12)', color: '#f0c987', border: '1px solid rgba(240,201,135,0.25)' }}><Bookmark className="w-2.5 h-2.5 fill-current" />SAVED</span>}
           </div>
           <div className="flex items-center space-x-2">
@@ -3119,7 +3132,7 @@ Write the complete KTU model answer now:`;
               <span>{badge.emoji}</span><span>{conf}%</span>
             </span>
             <span className="text-[11px] font-black px-2 py-0.5 rounded-full"
-              style={{ background: 'rgba(124,158,255,0.12)', color: '#a5b4fc', border: '1px solid rgba(124,158,255,0.25)' }}>
+              style={{ background: 'rgba(100,142,204,0.1)', color: '#9BB9E0', border: '1px solid rgba(100,142,204,0.2)' }}>
               {question.marks}m
             </span>
           </div>
@@ -3142,7 +3155,7 @@ Write the complete KTU model answer now:`;
 
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold leading-relaxed"
-              style={{ color: isStudied ? '#64748b' : '#e2e8f0', textDecoration: isStudied ? 'line-through' : 'none' }}>
+              style={{ color: isStudied ? '#697B96' : '#E7ECF5', textDecoration: isStudied ? 'line-through' : 'none' }}>
               {question.text}
             </p>
             {isStudied && (
@@ -3156,8 +3169,8 @@ Write the complete KTU model answer now:`;
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 className="flex items-center space-x-1.5 text-[11px] font-bold px-3 py-2 rounded-xl min-h-[36px]"
                 style={{
-                  background: expanded ? 'rgba(124,158,255,0.15)' : 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(124,158,255,0.25)', color: '#a5b4fc',
+                  background: expanded ? 'rgba(100,142,204,0.12)' : 'rgba(19,27,45,0.94)',
+                  border: '1px solid rgba(100,142,204,0.2)', color: '#9BB9E0',
                 }}>
                 {loading ? <Brain className="w-3 h-3" /> : expanded ? <ChevronUp className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                 <span>{loading ? 'Preparing...' : expanded ? 'Hide Answer' : isDrawQ ? 'Show KTU Drawing Figure' : 'Show KTU Model Answer'}</span>
@@ -3165,9 +3178,9 @@ Write the complete KTU model answer now:`;
               <button type="button" onClick={() => onBookmark(bookmarkData)}
                 className="p-2 rounded-xl min-h-[36px] min-w-[36px] flex items-center justify-center"
                 style={{
-                  background: isBookmarked ? 'rgba(240,201,135,0.15)' : 'rgba(255,255,255,0.04)',
-                  border: `1px solid ${isBookmarked ? 'rgba(240,201,135,0.35)' : 'rgba(255,255,255,0.07)'}`,
-                  color: isBookmarked ? '#f0c987' : '#64748b',
+                  background: isBookmarked ? 'rgba(240,201,135,0.15)' : 'rgba(19,27,45,0.94)',
+                  border: `1px solid ${isBookmarked ? 'rgba(240,201,135,0.35)' : 'rgba(122,158,218,0.2)'}`,
+                  color: isBookmarked ? '#f0c987' : '#697B96',
                 }}
                 aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark question'}
                 title={isBookmarked ? 'Remove bookmark' : 'Bookmark question'}>
@@ -3183,21 +3196,21 @@ Write the complete KTU model answer now:`;
                   initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden mt-3">
                   <div className="rounded-2xl overflow-hidden"
-                    style={{ background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(124,158,255,0.2)' }}>
+                    style={{ background: '#0D1424', border: '1px solid rgba(100,142,204,0.16)' }}>
                     <div className="px-4 py-2.5 flex items-center justify-between"
-                      style={{ background: 'rgba(124,158,255,0.08)', borderBottom: '1px solid rgba(124,158,255,0.15)' }}>
+                      style={{ background: 'rgba(100,142,204,0.07)', borderBottom: '1px solid rgba(100,142,204,0.12)' }}>
                       <div className="flex items-center space-x-2">
                         {isDrawQ ? (
-                          <><span style={{ color: '#a78bfa' }}>📐</span><span className="text-[11px] font-black uppercase tracking-wider" style={{ color: '#c4b5fd' }}>KTU Drawing Figure</span></>
+                          <><span style={{ color: '#3D5F94' }}>📐</span><span className="text-[11px] font-black uppercase tracking-wider" style={{ color: '#5F8ECC' }}>KTU Drawing Figure</span></>
                         ) : (
-                          <><BookOpen className="w-3.5 h-3.5" style={{ color: '#7c9eff' }} /><span className="text-[11px] font-black uppercase tracking-wider" style={{ color: '#a5b4fc' }}>KTU Model Answer</span></>
+                          <><BookOpen className="w-3.5 h-3.5" style={{ color: '#5F8ECC' }} /><span className="text-[11px] font-black uppercase tracking-wider" style={{ color: '#9BB9E0' }}>KTU Model Answer</span></>
                         )}
                         {isCoding && !isDrawQ && (
                           <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full"
                             style={{ background: 'rgba(134,223,186,0.1)', color: '#86dfba', border: '1px solid rgba(134,223,186,0.2)' }}>CODE</span>
                         )}
                       </div>
-                      <span className="text-[10px]" style={{ color: '#64748b' }}>{question.marks}m · {scheme}</span>
+                      <span className="text-[10px]" style={{ color: '#697B96' }}>{question.marks}m · {scheme}</span>
                     </div>
                     <div className="p-4 overflow-x-hidden">
                       <AIResultRenderer content={answer} questionData={bookmarkData} onBookmark={onBookmark} isBookmarked={isBookmarked} />
@@ -3208,7 +3221,7 @@ Write the complete KTU model answer now:`;
                           onClick={() => onAskChatbot({ question: question.text, answer })}
                           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                           className="w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl text-xs font-bold min-h-[44px]"
-                          style={{ background: 'linear-gradient(135deg,rgba(124,158,255,0.12),rgba(167,139,250,0.08))', border: '1px solid rgba(124,158,255,0.25)', color: '#a5b4fc' }}>
+                          style={{ background: 'linear-gradient(135deg,rgba(100,142,204,0.1),rgba(100,142,204,0.05))', border: '1px solid rgba(100,142,204,0.2)', color: '#9BB9E0' }}>
                           <MessageCircle className="w-3.5 h-3.5" /><span>Still confused? Ask AI Tutor to clarify</span><ArrowRight className="w-3 h-3" />
                         </motion.button>
                       </div>
@@ -3225,7 +3238,7 @@ Write the complete KTU model answer now:`;
                   style={{ background: 'rgba(232,165,152,0.08)', border: '1px solid rgba(232,165,152,0.25)' }}>
                   <p className="text-[12px] font-medium" style={{ color: '#e8a598' }}>{error}</p>
                   <button type="button" onClick={handleRetry}
-                    className="mt-1.5 text-[11px] font-bold underline min-h-[32px]" style={{ color: '#a5b4fc' }}>
+                    className="mt-1.5 text-[11px] font-bold underline min-h-[32px]" style={{ color: '#9BB9E0' }}>
                     ↻ Retry
                   </button>
                 </motion.div>
@@ -3287,8 +3300,8 @@ function ScoreTracker({ questions, studiedIds, internalMarks, scheme, isDrawing 
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
       className="glass-panel rounded-2xl p-4 md:p-5 mb-4">
       <div className="flex items-center space-x-2 mb-4 flex-wrap gap-2">
-        <BarChart3 className="w-4 h-4" style={{ color: '#7c9eff' }} />
-        <span className="text-sm font-black" style={{ color: '#e2e8f0' }}>Score Tracker</span>
+        <BarChart3 className="w-4 h-4" style={{ color: '#5F8ECC' }} />
+        <span className="text-sm font-black" style={{ color: '#E7ECF5' }}>Score Tracker</span>
         {safeZone !== null && (
           <span className="ml-auto atlas-tag"
             style={{
@@ -3303,24 +3316,24 @@ function ScoreTracker({ questions, studiedIds, internalMarks, scheme, isDrawing 
 
       {/* Pass rules */}
       <div className="mb-4 p-3 rounded-xl"
-        style={{ background: 'rgba(124,158,255,0.06)', border: '1px solid rgba(124,158,255,0.15)' }}>
+        style={{ background: 'rgba(100,142,204,0.06)', border: '1px solid rgba(100,142,204,0.12)' }}>
         <p className="text-[10px] font-black uppercase tracking-widest mb-2"
-          style={{ color: '#7c9eff' }}>{scheme} Pass Rules</p>
+          style={{ color: '#5F8ECC' }}>{scheme} Pass Rules</p>
         <div className="space-y-1">
-          <p className="text-[11px]" style={{ color: '#94a3b8' }}>
+          <p className="text-[11px]" style={{ color: '#8B9CB5' }}>
             • Min external: <span className="font-black" style={{ color: '#e8a598' }}>{rules.minExternal}/{rules.externalMax}</span>
           </p>
-          <p className="text-[11px]" style={{ color: '#94a3b8' }}>
+          <p className="text-[11px]" style={{ color: '#8B9CB5' }}>
             • Min total: <span className="font-black" style={{ color: '#e8a598' }}>{rules.minTotal}/{rules.internalMax + rules.externalMax}</span>
           </p>
           {rules.minInternal > 0 && (
-            <p className="text-[11px]" style={{ color: '#94a3b8' }}>
+            <p className="text-[11px]" style={{ color: '#8B9CB5' }}>
               • Min internal: <span className="font-black" style={{ color: '#e8a598' }}>{rules.minInternal}/{rules.internalMax}</span>
             </p>
           )}
           {internalMarks !== '' && (
             <p className="text-[11px] font-black mt-1.5 pt-1.5"
-              style={{ color: safeZone ? '#86dfba' : '#e8a598', borderTop: '1px solid rgba(124,158,255,0.1)' }}>
+              style={{ color: safeZone ? '#86dfba' : '#e8a598', borderTop: '1px solid rgba(100,142,204,0.08)' }}>
               → With internal {internalMarks}, you need <span style={{ color: '#f0c987' }}>≥ {minExtNeeded}</span> in exam
             </p>
           )}
@@ -3362,21 +3375,21 @@ function ScoreTracker({ questions, studiedIds, internalMarks, scheme, isDrawing 
         {isDrawing ? (
           <div className="text-center">
             <div className="text-xl font-black" style={{ color: '#86dfba' }}>{guaranteedMarks}+</div>
-            <div className="text-[10px]" style={{ color: '#64748b' }}>Estimated Marks</div>
+            <div className="text-[10px]" style={{ color: '#697B96' }}>Estimated Marks</div>
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-2 text-center">
             <div>
-              <div className="text-sm font-black" style={{ color: '#e2e8f0' }}>{partATotal}</div>
-              <div className="text-[9px]" style={{ color: '#64748b' }}>Part A</div>
+              <div className="text-sm font-black" style={{ color: '#E7ECF5' }}>{partATotal}</div>
+              <div className="text-[10px]" style={{ color: '#697B96' }}>Part A</div>
             </div>
             <div>
-              <div className="text-sm font-black" style={{ color: '#e2e8f0' }}>{guaranteedMarks - partATotal}</div>
-              <div className="text-[9px]" style={{ color: '#64748b' }}>Part B</div>
+              <div className="text-sm font-black" style={{ color: '#E7ECF5' }}>{guaranteedMarks - partATotal}</div>
+              <div className="text-[10px]" style={{ color: '#697B96' }}>Part B</div>
             </div>
             <div>
               <div className="text-sm font-black" style={{ color: '#86dfba' }}>{guaranteedMarks}</div>
-              <div className="text-[9px]" style={{ color: '#64748b' }}>Total</div>
+              <div className="text-[10px]" style={{ color: '#697B96' }}>Total</div>
             </div>
           </div>
         )}
@@ -3386,13 +3399,13 @@ function ScoreTracker({ questions, studiedIds, internalMarks, scheme, isDrawing 
       {!isDrawing && (
         <div className="grid grid-cols-2 gap-3 mb-3">
           {[
-            { label: 'Part A', studied: partAStudied, total: partAQs.length, color: '#a5b4fc', rgb: '124,158,255' },
-            { label: 'Part B', studied: partBStudied, total: partBQs.length, color: '#c4b5fd', rgb: '167,139,250' },
+            { label: 'Part A', studied: partAStudied, total: partAQs.length, color: '#9BB9E0', rgb: '124,158,255' },
+            { label: 'Part B', studied: partBStudied, total: partBQs.length, color: '#3D5F94', rgb: '30,539,250' },
           ].map(p => (
             <div key={p.label} className="p-3 rounded-xl text-center"
               style={{ background: `rgba(${p.rgb},0.07)`, border: `1px solid rgba(${p.rgb},0.15)` }}>
               <div className="text-lg font-black" style={{ color: p.color }}>{p.studied}/{p.total}</div>
-              <div className="text-[10px] uppercase tracking-wider" style={{ color: '#64748b' }}>{p.label}</div>
+              <div className="text-[10px] uppercase tracking-wider" style={{ color: '#697B96' }}>{p.label}</div>
               <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ background: `rgba(${p.rgb},0.1)` }}>
                 <motion.div className="h-full rounded-full" style={{ background: p.color }}
                   animate={{ width: `${p.total > 0 ? (p.studied / p.total) * 100 : 0}%` }}
@@ -3406,12 +3419,12 @@ function ScoreTracker({ questions, studiedIds, internalMarks, scheme, isDrawing 
       {/* Overall coverage */}
       <div>
         <div className="flex justify-between mb-1">
-          <span className="text-[11px] font-bold" style={{ color: '#94a3b8' }}>Overall Coverage</span>
-          <span className="text-[11px] font-black" style={{ color: '#7c9eff' }}>{coveragePct}%</span>
+          <span className="text-[11px] font-bold" style={{ color: '#8B9CB5' }}>Overall Coverage</span>
+          <span className="text-[11px] font-black" style={{ color: '#5F8ECC' }}>{coveragePct}%</span>
         </div>
-        <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(124,158,255,0.1)' }}>
+        <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(100,142,204,0.08)' }}>
           <motion.div className="h-full rounded-full"
-            style={{ background: 'linear-gradient(90deg,#7c9eff,#86dfba)' }}
+            style={{ background: 'linear-gradient(90deg,#5F8ECC,#86dfba)' }}
             animate={{ width: `${coveragePct}%` }} transition={{ duration: 0.8 }} />
         </div>
       </div>
@@ -3445,39 +3458,39 @@ function CIETrackerPanel({ onClose, scheme }) {
     <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
       transition={{ type: 'spring', stiffness: 300, damping: 35 }}
       className="fixed right-0 top-0 h-full w-full max-w-sm z-[8500] overflow-y-auto"
-      style={{ background: '#0a0b12', border: '1px solid rgba(124,158,255,0.2)' }}
+      style={{ background: '#0A1020', border: '1px solid rgba(100,142,204,0.16)' }}
       role="dialog" aria-label="CIE Tracker">
       <div className="p-5 md:p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-2">
-            <GraduationCap className="w-5 h-5" style={{ color: '#7c9eff' }} />
-            <span className="font-black" style={{ color: '#e2e8f0' }}>CIE Tracker</span>
+            <GraduationCap className="w-5 h-5" style={{ color: '#5F8ECC' }} />
+            <span className="font-black" style={{ color: '#E7ECF5' }}>CIE Tracker</span>
           </div>
           <button type="button" onClick={onClose}
             className="p-2 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.05)', color: '#94a3b8' }} aria-label="Close">
+            style={{ background: '#0D1424', color: '#8B9CB5' }} aria-label="Close">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="mb-4 p-4 rounded-2xl"
-          style={{ background: 'rgba(124,158,255,0.06)', border: '1px solid rgba(124,158,255,0.15)' }}>
-          <p className="text-[11px] font-black uppercase tracking-widest mb-3" style={{ color: '#7c9eff' }}>
+          style={{ background: 'rgba(100,142,204,0.06)', border: '1px solid rgba(100,142,204,0.12)' }}>
+          <p className="text-[11px] font-black uppercase tracking-widest mb-3" style={{ color: '#5F8ECC' }}>
             {scheme} Pass Rules
           </p>
           <div className="space-y-1.5">
             {[
-              { label: 'Internal Max', value: rules.internalMax, color: '#e2e8f0' },
-              { label: 'External Max', value: rules.externalMax, color: '#e2e8f0' },
+              { label: 'Internal Max', value: rules.internalMax, color: '#E7ECF5' },
+              { label: 'External Max', value: rules.externalMax, color: '#E7ECF5' },
               { label: 'Min External', value: rules.minExternal, color: '#e8a598' },
               { label: 'Min Total',    value: rules.minTotal,    color: '#e8a598' },
             ].map(r => (
-              <p key={r.label} className="text-[12px]" style={{ color: '#94a3b8' }}>
+              <p key={r.label} className="text-[12px]" style={{ color: '#8B9CB5' }}>
                 • {r.label}: <span className="font-black" style={{ color: r.color }}>{r.value}</span>
               </p>
             ))}
             {rules.minInternal > 0 ? (
-              <p className="text-[12px]" style={{ color: '#94a3b8' }}>
+              <p className="text-[12px]" style={{ color: '#8B9CB5' }}>
                 • Min Internal: <span className="font-black" style={{ color: '#e8a598' }}>{rules.minInternal}</span>
               </p>
             ) : (
@@ -3487,12 +3500,12 @@ function CIETrackerPanel({ onClose, scheme }) {
         </div>
 
         <div className="mb-3">
-          <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#94a3b8' }}>
+          <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#8B9CB5' }}>
             Your CE / Internal Marks (out of {rules.internalMax})
           </label>
           <input type="number" min="0" max={rules.internalMax} placeholder={`0–${rules.internalMax}`}
             value={ceMarks} onChange={e => { setCeMarks(e.target.value); setAnalysis(null); }}
-            className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium" style={{ color: '#e2e8f0' }} />
+            className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium" style={{ color: '#E7ECF5' }} />
         </div>
 
         <div className="flex gap-2 mb-5">
@@ -3501,9 +3514,9 @@ function CIETrackerPanel({ onClose, scheme }) {
               onClick={() => { setCeMarks(String(v)); setAnalysis(null); }}
               className="flex-1 py-2 rounded-xl text-[11px] font-black transition-all min-h-[40px]"
               style={{
-                background: ceMarks === String(v) ? 'rgba(124,158,255,0.2)' : 'rgba(255,255,255,0.03)',
-                border: `1px solid ${ceMarks === String(v) ? 'rgba(124,158,255,0.5)' : 'rgba(255,255,255,0.07)'}`,
-                color: ceMarks === String(v) ? '#a5b4fc' : '#64748b',
+                background: ceMarks === String(v) ? 'rgba(100,142,204,0.16)' : 'rgba(13,20,36,0.9)',
+                border: `1px solid ${ceMarks === String(v) ? 'rgba(100,142,204,0.4)' : 'rgba(122,158,218,0.2)'}`,
+                color: ceMarks === String(v) ? '#9BB9E0' : '#697B96',
               }}>
               {v}
             </button>
@@ -3512,14 +3525,14 @@ function CIETrackerPanel({ onClose, scheme }) {
 
         {ceMarks && (
           <div className="mb-4 p-3 rounded-xl"
-            style={{ background: 'rgba(124,158,255,0.05)', border: '1px solid rgba(124,158,255,0.12)' }}>
+            style={{ background: 'rgba(100,142,204,0.05)', border: '1px solid rgba(100,142,204,0.1)' }}>
             <div className="flex justify-between mb-1.5">
-              <span className="text-[10px] font-bold" style={{ color: '#64748b' }}>Internal progress</span>
-              <span className="text-[10px] font-black" style={{ color: '#7c9eff' }}>{progressPct}%</span>
+              <span className="text-[10px] font-bold" style={{ color: '#697B96' }}>Internal progress</span>
+              <span className="text-[10px] font-black" style={{ color: '#5F8ECC' }}>{progressPct}%</span>
             </div>
-            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(124,158,255,0.1)' }}>
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(100,142,204,0.08)' }}>
               <motion.div className="h-full rounded-full"
-                style={{ background: progressPct >= 65 ? 'linear-gradient(90deg,#86dfba,#c4e5d1)' : 'linear-gradient(90deg,#e8a598,#f0c987)' }}
+                style={{ background: progressPct >= 65 ? 'linear-gradient(90deg,#86dfba,rgba(134,223,186,0.12))' : 'linear-gradient(90deg,#e8a598,#f0c987)' }}
                 animate={{ width: `${Math.min(progressPct, 100)}%` }} transition={{ duration: 0.8 }} />
             </div>
           </div>
@@ -3557,13 +3570,13 @@ function CIETrackerPanel({ onClose, scheme }) {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { label: 'Your Internal',      value: `${analysis.ce}/${rules.internalMax}`,    color: '#a5b4fc' },
+                  { label: 'Your Internal',      value: `${analysis.ce}/${rules.internalMax}`,    color: '#9BB9E0' },
                   { label: 'Min Semester Needed', value: `${analysis.minExt}/${rules.externalMax}`, color: analysis.safeZone ? '#86dfba' : '#e8a598' },
                 ].map((s, i) => (
                   <div key={i} className="p-3 rounded-xl text-center"
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                    style={{ background: 'rgba(13,20,36,0.9)', border: '1px solid rgba(100,142,204,0.12)' }}>
                     <div className="text-lg font-black" style={{ color: s.color }}>{s.value}</div>
-                    <div className="text-[10px]" style={{ color: '#64748b' }}>{s.label}</div>
+                    <div className="text-[10px]" style={{ color: '#697B96' }}>{s.label}</div>
                   </div>
                 ))}
               </div>
@@ -3653,17 +3666,17 @@ Keep it practical and KTU exam focused.`;
     <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
       transition={{ type: 'spring', stiffness: 300, damping: 35 }}
       className="fixed right-0 top-0 h-full w-full sm:max-w-lg z-[8500] overflow-y-auto"
-      style={{ background: '#0a0b12', border: '1px solid rgba(124,158,255,0.2)' }}
+      style={{ background: '#0A1020', border: '1px solid rgba(100,142,204,0.16)' }}
       role="dialog" aria-label="Study Scheduler">
       <div className="p-5 md:p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-2">
-            <Calendar className="w-5 h-5" style={{ color: '#7c9eff' }} />
-            <span className="font-black" style={{ color: '#e2e8f0' }}>Study Scheduler</span>
+            <Calendar className="w-5 h-5" style={{ color: '#5F8ECC' }} />
+            <span className="font-black" style={{ color: '#E7ECF5' }}>Study Scheduler</span>
           </div>
           <button type="button" onClick={onClose}
             className="p-2 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.05)', color: '#94a3b8' }} aria-label="Close">
+            style={{ background: '#0D1424', color: '#8B9CB5' }} aria-label="Close">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -3671,15 +3684,15 @@ Keep it practical and KTU exam focused.`;
         {!schedule ? (
           <div className="space-y-4">
             <div>
-              <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#94a3b8' }}>📅 Exam Date *</label>
+              <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#8B9CB5' }}>📅 Exam Date *</label>
               <input type="date" value={form.examDate} onChange={e => setForm(p => ({ ...p, examDate: e.target.value }))}
-                className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium" style={{ color: '#e2e8f0' }} />
+                className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium" style={{ color: '#E7ECF5' }} />
             </div>
             <div>
-              <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#94a3b8' }}>📚 Subjects *</label>
+              <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#8B9CB5' }}>📚 Subjects *</label>
               <textarea value={form.subjects} onChange={e => setForm(p => ({ ...p, subjects: e.target.value }))}
                 placeholder="e.g. Data Structures, DBMS, Operating Systems" rows={2} maxLength={500}
-                className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium resize-none" style={{ color: '#e2e8f0' }} />
+                className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium resize-none" style={{ color: '#E7ECF5' }} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               {[
@@ -3687,28 +3700,28 @@ Keep it practical and KTU exam focused.`;
                 { label: '☕ Break', key: 'breakDuration', opts: ['5','10','15','20','30'], suffix: 'min' },
               ].map(f => (
                 <div key={f.key}>
-                  <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#94a3b8' }}>{f.label}</label>
+                  <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#8B9CB5' }}>{f.label}</label>
                   <div className="relative">
                     <select value={form[f.key]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
-                      className="w-full atlas-select rounded-2xl px-3 py-3 text-sm font-bold pr-8 min-h-[44px]" style={{ color: '#e2e8f0' }}>
-                      {f.opts.map(o => <option key={o} value={o} style={{ background: '#0a0b12' }}>{o}{f.suffix}</option>)}
+                      className="w-full atlas-select rounded-2xl px-3 py-3 text-sm font-bold pr-8 min-h-[44px]" style={{ color: '#E7ECF5' }}>
+                      {f.opts.map(o => <option key={o} value={o} style={{ background: '#0A1020' }}>{o}{f.suffix}</option>)}
                     </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: '#64748b' }} />
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none" style={{ color: '#697B96' }} />
                   </div>
                 </div>
               ))}
             </div>
             <div>
-              <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#94a3b8' }}>😰 Weak Subjects</label>
+              <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#8B9CB5' }}>😰 Weak Subjects</label>
               <input value={form.weakSubjects} onChange={e => setForm(p => ({ ...p, weakSubjects: e.target.value }))}
                 placeholder="Gets more time allocated" maxLength={200}
-                className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium" style={{ color: '#e2e8f0' }} />
+                className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium" style={{ color: '#E7ECF5' }} />
             </div>
             <div>
-              <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#94a3b8' }}>✨ Preferences</label>
+              <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#8B9CB5' }}>✨ Preferences</label>
               <input value={form.preferences} onChange={e => setForm(p => ({ ...p, preferences: e.target.value }))}
                 placeholder="e.g. No study after 10pm" maxLength={200}
-                className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium" style={{ color: '#e2e8f0' }} />
+                className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium" style={{ color: '#E7ECF5' }} />
             </div>
 
             {error && (
@@ -3716,28 +3729,28 @@ Keep it practical and KTU exam focused.`;
                 style={{ background: 'rgba(232,165,152,0.08)', border: '1px solid rgba(232,165,152,0.25)' }}>
                 <p className="text-[12px] font-medium" style={{ color: '#e8a598' }}>{error}</p>
                 <button type="button" onClick={() => { setError(''); generate(); }}
-                  className="mt-1.5 text-[11px] font-bold underline min-h-[32px]" style={{ color: '#a5b4fc' }}>↻ Retry</button>
+                  className="mt-1.5 text-[11px] font-bold underline min-h-[32px]" style={{ color: '#9BB9E0' }}>↻ Retry</button>
               </motion.div>
             )}
 
             {loading ? (
               <div className="rounded-2xl p-5"
-                style={{ background: 'rgba(124,158,255,0.06)', border: '1px solid rgba(124,158,255,0.2)' }}>
+                style={{ background: 'rgba(100,142,204,0.06)', border: '1px solid rgba(100,142,204,0.16)' }}>
                 <div className="flex items-center space-x-3 mb-3">
                   <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-                    <Brain className="w-5 h-5" style={{ color: '#7c9eff' }} />
+                    <Brain className="w-5 h-5" style={{ color: '#5F8ECC' }} />
                   </motion.div>
                   <div className="flex-1 min-w-0">
                     <motion.p key={phase} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                      className="text-[11px] font-medium truncate" style={{ color: '#7c9eff' }}>
+                      className="text-[11px] font-medium truncate" style={{ color: '#5F8ECC' }}>
                       {currentPhase.icon} {currentPhase.label}
                     </motion.p>
                   </div>
-                  <span className="text-[11px] font-black" style={{ color: '#a78bfa' }}>{Math.round(progress)}%</span>
+                  <span className="text-[11px] font-black" style={{ color: '#3D5F94' }}>{Math.round(progress)}%</span>
                 </div>
-                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(124,158,255,0.1)' }}>
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(100,142,204,0.08)' }}>
                   <motion.div className="h-full rounded-full"
-                    style={{ background: 'linear-gradient(90deg,#7c9eff,#a78bfa)' }}
+                    style={{ background: 'linear-gradient(90deg,#5F8ECC,#3D5F94)' }}
                     animate={{ width: `${progress}%` }} />
                 </div>
               </div>
@@ -3756,7 +3769,7 @@ Keep it practical and KTU exam focused.`;
             <div className="flex items-center justify-between mb-4">
               <span className="text-xs font-black" style={{ color: '#86dfba' }}>✓ Schedule Ready!</span>
               <button type="button" onClick={() => { setSchedule(''); setError(''); progRef.current = 0; }}
-                className="text-[11px] font-bold underline min-h-[44px] flex items-center" style={{ color: '#a5b4fc' }}>
+                className="text-[11px] font-bold underline min-h-[44px] flex items-center" style={{ color: '#9BB9E0' }}>
                 Regenerate
               </button>
             </div>
@@ -3832,39 +3845,39 @@ function TargetStrategistPanel({ onClose, questions, scheme, internalMarks, isDr
     <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
       transition={{ type: 'spring', stiffness: 300, damping: 35 }}
       className="fixed right-0 top-0 h-full w-full max-w-sm z-[8500] overflow-y-auto"
-      style={{ background: '#0a0b12', border: '1px solid rgba(124,158,255,0.2)' }}
+      style={{ background: '#0A1020', border: '1px solid rgba(100,142,204,0.16)' }}
       role="dialog" aria-label="Target Strategist">
       <div className="p-5 md:p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-2">
-            <Target className="w-5 h-5" style={{ color: '#7c9eff' }} />
-            <span className="font-black" style={{ color: '#e2e8f0' }}>Target Strategist</span>
+            <Target className="w-5 h-5" style={{ color: '#5F8ECC' }} />
+            <span className="font-black" style={{ color: '#E7ECF5' }}>Target Strategist</span>
           </div>
           <button type="button" onClick={onClose}
             className="p-2 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.05)', color: '#94a3b8' }} aria-label="Close">
+            style={{ background: '#0D1424', color: '#8B9CB5' }} aria-label="Close">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="mb-4 p-3 rounded-xl"
-          style={{ background: 'rgba(124,158,255,0.06)', border: '1px solid rgba(124,158,255,0.15)' }}>
-          <p className="text-[12px] leading-relaxed" style={{ color: '#94a3b8' }}>
+          style={{ background: 'rgba(100,142,204,0.06)', border: '1px solid rgba(100,142,204,0.12)' }}>
+          <p className="text-[12px] leading-relaxed" style={{ color: '#8B9CB5' }}>
             Enter your target → ATLAS calculates the{' '}
-            <span className="font-black" style={{ color: '#7c9eff' }}>exact questions</span>{' '}
+            <span className="font-black" style={{ color: '#5F8ECC' }}>exact questions</span>{' '}
             you need to study with an{' '}
             <span className="font-black" style={{ color: '#f0c987' }}>adaptive safety buffer</span>.
           </p>
           {effectiveMinTarget > rules.minExternal && (
             <p className="text-[11px] font-black mt-2 pt-2"
-              style={{ color: '#e8a598', borderTop: '1px solid rgba(124,158,255,0.1)' }}>
+              style={{ color: '#e8a598', borderTop: '1px solid rgba(100,142,204,0.08)' }}>
               ⚠ With internal {internalMarks}, minimum target is {effectiveMinTarget} (not {rules.minExternal})
             </p>
           )}
         </div>
 
         <div className="mb-3">
-          <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#94a3b8' }}>
+          <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#8B9CB5' }}>
             Target External Marks (min {effectiveMinTarget}, max {rules.externalMax})
           </label>
           <input type="number" min={effectiveMinTarget} max={rules.externalMax}
@@ -3872,7 +3885,7 @@ function TargetStrategistPanel({ onClose, questions, scheme, internalMarks, isDr
             value={targetMark} onChange={e => { setTargetMark(e.target.value); setResult(null); }}
             onKeyDown={handleKeyDown}
             className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium"
-            style={{ color: '#e2e8f0' }} aria-label="Target marks" />
+            style={{ color: '#E7ECF5' }} aria-label="Target marks" />
         </div>
 
         <div className="flex gap-2 mb-5">
@@ -3881,9 +3894,9 @@ function TargetStrategistPanel({ onClose, questions, scheme, internalMarks, isDr
               onClick={() => { setTargetMark(String(t)); setResult(null); }}
               className="flex-1 py-2 rounded-xl text-[11px] font-black transition-all min-h-[40px]"
               style={{
-                background: targetMark === String(t) ? 'rgba(124,158,255,0.2)' : 'rgba(255,255,255,0.03)',
-                border: `1px solid ${targetMark === String(t) ? 'rgba(124,158,255,0.5)' : 'rgba(255,255,255,0.07)'}`,
-                color: targetMark === String(t) ? '#a5b4fc' : '#64748b',
+                background: targetMark === String(t) ? 'rgba(100,142,204,0.16)' : 'rgba(13,20,36,0.9)',
+                border: `1px solid ${targetMark === String(t) ? 'rgba(100,142,204,0.4)' : 'rgba(122,158,218,0.2)'}`,
+                color: targetMark === String(t) ? '#9BB9E0' : '#697B96',
               }}>
               {t}
             </button>
@@ -3934,26 +3947,26 @@ function TargetStrategistPanel({ onClose, questions, scheme, internalMarks, isDr
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { l: 'Target', v: result.target, c: '#a5b4fc' },
+                      { l: 'Target', v: result.target, c: '#9BB9E0' },
                       { l: 'Guaranteed', v: result.guaranteedMarks, c: '#86dfba' },
                       { l: 'Questions', v: result.totalMustStudy, c: '#f0c987' },
                     ].map((s, i) => (
                       <div key={i} className="p-3 rounded-xl text-center"
-                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                        style={{ background: 'rgba(13,20,36,0.9)', border: '1px solid rgba(100,142,204,0.12)' }}>
                         <div className="text-lg font-black" style={{ color: s.c }}>{s.v}</div>
-                        <div className="text-[10px]" style={{ color: '#64748b' }}>{s.l}</div>
+                        <div className="text-[10px]" style={{ color: '#697B96' }}>{s.l}</div>
                       </div>
                     ))}
                   </div>
                   <div className="p-3 rounded-xl"
-                    style={{ background: 'rgba(124,158,255,0.05)', border: '1px solid rgba(124,158,255,0.12)' }}>
+                    style={{ background: 'rgba(100,142,204,0.05)', border: '1px solid rgba(100,142,204,0.1)' }}>
                     <div className="flex justify-between mb-1.5">
-                      <span className="text-[10px] font-bold" style={{ color: '#64748b' }}>Avg Question Confidence</span>
-                      <span className="text-[10px] font-black" style={{ color: '#7c9eff' }}>{result.avgConfidence}%</span>
+                      <span className="text-[10px] font-bold" style={{ color: '#697B96' }}>Avg Question Confidence</span>
+                      <span className="text-[10px] font-black" style={{ color: '#5F8ECC' }}>{result.avgConfidence}%</span>
                     </div>
-                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(124,158,255,0.1)' }}>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(100,142,204,0.08)' }}>
                       <motion.div className="h-full rounded-full"
-                        style={{ background: 'linear-gradient(90deg,#7c9eff,#86dfba)' }}
+                        style={{ background: 'linear-gradient(90deg,#5F8ECC,#86dfba)' }}
                         animate={{ width: `${result.avgConfidence}%` }} transition={{ duration: 0.8 }} />
                     </div>
                   </div>
@@ -3984,26 +3997,26 @@ function BookmarksPanel({ onClose, bookmarks, onRemove, onClearAll }) {
     <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
       transition={{ type: 'spring', stiffness: 300, damping: 35 }}
       className="fixed right-0 top-0 h-full w-full max-w-sm z-[8700] overflow-y-auto"
-      style={{ background: '#0a0b12', border: '1px solid rgba(240,201,135,0.2)' }}
+      style={{ background: '#0A1020', border: '1px solid rgba(240,201,135,0.2)' }}
       role="dialog" aria-label="Bookmarks">
       <div className="p-5 md:p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-2">
             <Bookmark className="w-5 h-5" style={{ color: '#f0c987' }} />
-            <span className="font-black" style={{ color: '#e2e8f0' }}>Bookmarks ({bookmarks.length})</span>
+            <span className="font-black" style={{ color: '#E7ECF5' }}>Bookmarks ({bookmarks.length})</span>
           </div>
           <button type="button" onClick={onClose}
             className="p-2 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.05)', color: '#94a3b8' }} aria-label="Close bookmarks">
+            style={{ background: '#0D1424', color: '#8B9CB5' }} aria-label="Close bookmarks">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {bookmarks.length === 0 ? (
           <div className="text-center py-16">
-            <Bookmark className="w-12 h-12 mx-auto mb-4" style={{ color: '#334155' }} />
-            <p className="font-bold mb-2" style={{ color: '#94a3b8' }}>No bookmarks yet</p>
-            <p className="text-[12px]" style={{ color: '#64748b' }}>Tap the bookmark icon on any question to save it here.</p>
+            <Bookmark className="w-12 h-12 mx-auto mb-4" style={{ color: '#697B96' }} />
+            <p className="font-bold mb-2" style={{ color: '#8B9CB5' }}>No bookmarks yet</p>
+            <p className="text-[12px]" style={{ color: '#697B96' }}>Tap the bookmark icon on any question to save it here.</p>
           </div>
         ) : (
           <>
@@ -4020,13 +4033,13 @@ function BookmarksPanel({ onClose, bookmarks, onRemove, onClearAll }) {
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <span className="atlas-tag atlas-tag-amber">{b.marks}m</span>
                           {b.module && <span className="atlas-tag atlas-tag-indigo">M{b.module}</span>}
-                          <span className="text-[9px]" style={{ color: '#64748b' }}>{(b.subject || '').split('-')[0]?.trim()}</span>
+                          <span className="text-[10px]" style={{ color: '#697B96' }}>{(b.subject || '').split('-')[0]?.trim()}</span>
                         </div>
-                        <p className="text-[12px] leading-relaxed" style={{ color: '#e2e8f0' }}>{b.text}</p>
+                        <p className="text-[12px] leading-relaxed" style={{ color: '#E7ECF5' }}>{b.text}</p>
                       </div>
                       <button type="button" onClick={() => onRemove(b)}
                         className="flex-shrink-0 p-1.5 rounded-lg min-h-[32px] min-w-[32px] flex items-center justify-center transition-colors hover:bg-white/5"
-                        style={{ color: '#64748b' }} aria-label={`Remove bookmark: ${b.text.slice(0, 30)}`}>
+                        style={{ color: '#697B96' }} aria-label={`Remove bookmark: ${b.text.slice(0, 30)}`}>
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -4053,7 +4066,7 @@ function BookmarksPanel({ onClose, bookmarks, onRemove, onClearAll }) {
 function ReconnectScreen() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden"
-      style={{ background: '#04050a' }} role="main" aria-label="Reconnecting to ATLAS">
+      style={{ background: '#0A1020' }} role="main" aria-label="Reconnecting to ATLAS">
       <div className="aurora-bg" aria-hidden="true">
         <div className="aurora-orb aurora-orb-1" /><div className="aurora-orb aurora-orb-2" /><div className="aurora-orb aurora-orb-3" />
       </div>
@@ -4063,28 +4076,28 @@ function ReconnectScreen() {
           transition={{ type: 'spring', stiffness: 150, damping: 15 }}>
           <div className="relative">
             <motion.div className="absolute inset-0 rounded-3xl"
-              style={{ background: 'radial-gradient(circle,rgba(124,158,255,0.4),transparent 70%)' }}
+              style={{ background: 'radial-gradient(circle,rgba(100,142,204,0.3),transparent 70%)' }}
               animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0.8, 0.5] }}
               transition={{ duration: 2.5, repeat: Infinity }} />
             <div className="relative p-6 rounded-3xl"
-              style={{ background: 'linear-gradient(135deg,#7c9eff,#a78bfa,#c4b5fd)', boxShadow: '0 0 60px rgba(124,158,255,0.4)' }}>
+              style={{ background: 'linear-gradient(135deg,#5F8ECC,#2E5082)', boxShadow: '0 0 60px rgba(100,142,204,0.3)' }}>
               <Telescope className="w-14 h-14" style={{ color: '#ffffff' }} aria-hidden="true" />
             </div>
           </div>
         </motion.div>
         <h1 className="text-5xl font-black tracking-tighter mb-2"
-          style={{ color: '#e2e8f0', textShadow: '0 0 40px rgba(124,158,255,0.5)' }}>ATLAS</h1>
+          style={{ color: '#E7ECF5', textShadow: '0 0 40px rgba(100,142,204,0.4)' }}>ATLAS</h1>
         <div className="flex items-center space-x-2 mt-4">
           <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2, repeat: Infinity }}
             className="flex items-center space-x-2 px-4 py-2 rounded-full"
-            style={{ background: 'rgba(124,158,255,0.1)', border: '1px solid rgba(124,158,255,0.25)' }}>
+            style={{ background: 'rgba(100,142,204,0.08)', border: '1px solid rgba(100,142,204,0.2)' }}>
             <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}>
-              <RefreshCw className="w-3.5 h-3.5" style={{ color: '#7c9eff' }} />
+              <RefreshCw className="w-3.5 h-3.5" style={{ color: '#5F8ECC' }} />
             </motion.div>
-            <span className="text-xs font-black tracking-widest uppercase" style={{ color: '#7c9eff' }}>Reconnecting...</span>
+            <span className="text-xs font-black tracking-widest uppercase" style={{ color: '#5F8ECC' }}>Reconnecting...</span>
           </motion.div>
         </div>
-        <p className="text-[12px] font-medium mt-4" style={{ color: '#64748b' }}>Restoring your session</p>
+        <p className="text-[12px] font-medium mt-4" style={{ color: '#697B96' }}>Restoring your session</p>
       </motion.div>
     </div>
   );
@@ -4101,92 +4114,113 @@ function WelcomeScreen({ onContinue }) {
   }, []);
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex flex-col" style={{ background: '#04050a' }}>
+    <div className="min-h-screen relative overflow-hidden flex flex-col" style={{ background: '#0A1020' }}>
       <div className="aurora-bg" aria-hidden="true">
         <div className="aurora-orb aurora-orb-1" /><div className="aurora-orb aurora-orb-2" />
         <div className="aurora-orb aurora-orb-3" /><div className="aurora-orb aurora-orb-4" />
       </div>
       <div className="noise-overlay" aria-hidden="true" />
       <div className="relative z-10 flex flex-col min-h-screen">
-        <div className="flex-1 flex flex-col items-center justify-center px-4 pt-12 pb-6">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 pt-12 pb-8">
+          {/* Identity */}
           <motion.div initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}
-            className="text-center mb-8 md:mb-12">
-            <motion.div className="flex justify-center mb-6" initial={{ scale: 0 }} animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 150, damping: 15, delay: 0.2 }}>
-              <AtlasLogo size={72} />
+            className="text-center mb-8 md:mb-10">
+            <motion.div className="flex justify-center mb-5" initial={{ scale: 0 }} animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 150, damping: 15, delay: 0.15 }}>
+              <div className="relative inline-flex p-3"
+                style={{ background: '#0D1424', borderRadius: 22, border: '1px solid rgba(122,158,218,0.16)', boxShadow: '0 12px 32px rgba(100,142,204,0.18)' }}>
+                <AtlasLogo size={46} />
+              </div>
             </motion.div>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-2"
-                style={{ color: '#e2e8f0', textShadow: '0 0 80px rgba(124,158,255,0.5)' }}>ATLAS</h1>
-              <div className="flex items-center justify-center space-x-2 md:space-x-3 mb-4">
-                <div className="h-px w-10 md:w-16" style={{ background: 'linear-gradient(to right,transparent,#7c9eff)' }} />
-                <span className="text-[11px] md:text-xs font-black tracking-[0.15em] md:tracking-[0.25em] uppercase" style={{ color: '#7c9eff' }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+              <div className="flex items-center justify-center space-x-3 mb-2">
+                <div className="h-px w-10 md:w-16" style={{ background: 'linear-gradient(to right,transparent,rgba(100,142,204,0.4))' }} />
+                <span className="text-[11px] md:text-xs font-black tracking-[0.18em] md:tracking-[0.24em] uppercase" style={{ color: '#7FA6DC' }}>
                   KTU Vault Pro · RAG Edition
                 </span>
-                <div className="h-px w-10 md:w-16" style={{ background: 'linear-gradient(to left,transparent,#7c9eff)' }} />
+                <div className="h-px w-10 md:w-16" style={{ background: 'linear-gradient(to left,transparent,rgba(100,142,204,0.4))' }} />
               </div>
-              <p className="text-base md:text-lg font-medium max-w-sm md:max-w-md mx-auto leading-relaxed px-4" style={{ color: '#94a3b8' }}>
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-3 leading-none"
+                style={{ color: '#E7ECF5', textShadow: '0 2px 40px rgba(100,142,204,0.16)' }}>ATLAS</h1>
+              <p className="text-base md:text-lg font-medium max-w-sm md:max-w-md mx-auto leading-relaxed px-4" style={{ color: '#8B9CB5' }}>
                 The KTU exam prep tool that actually thinks.
               </p>
             </motion.div>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-              className="flex items-center justify-center space-x-4 md:space-x-6 mt-6 md:mt-8">
-              {[{ value: '40+', label: 'Subjects' },{ value: '500+', label: 'PYQs' },{ value: '10', label: 'AI Features' },{ value: '15+', label: 'Providers' }].map((s,i) => (
+
+            {/* Proof strip — values verified against the onboard KTU vault */}
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
+              className="flex items-center justify-center gap-8 md:gap-10 mt-7">
+              {[{ value: '50+', label: 'Subjects' },{ value: '350+', label: 'PYQs' },{ value: '10', label: 'AI Features' },{ value: '20+', label: 'Providers' }].map((s,i) => (
                 <div key={i} className="text-center">
-                  <div className="text-xl md:text-2xl font-black" style={{ color: '#e2e8f0' }}>{s.value}</div>
-                  <div className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider" style={{ color: '#64748b' }}>{s.label}</div>
+                  <div className="text-xl md:text-3xl font-black tabular-nums" style={{ color: '#7FA6DC' }}>{s.value}</div>
+                  <div className="text-[11px] md:text-xs font-bold uppercase tracking-wider mt-0.5" style={{ color: '#697B96' }}>{s.label}</div>
                 </div>
               ))}
             </motion.div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }}
+          {/* 10 AI-Native Features */}
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
             className="w-full max-w-5xl mx-auto mb-8 md:mb-10 px-4">
-            <p className="text-center text-[11px] font-black uppercase tracking-[0.2em] mb-4 md:mb-5" style={{ color: '#64748b' }}>
-              Powered by 10 AI-Native Features
+            <p className="text-center text-[11px] md:text-xs font-black uppercase tracking-[0.22em] mb-1.5" style={{ color: '#697B96' }}>
+              10 AI-Native Features
+            </p>
+            <p className="text-center text-[13px] md:text-sm font-medium mb-5 md:mb-6" style={{ color: '#8B9CB5' }}>
+              Purpose-built for the KTU exam — not a generic chatbot.
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
-              {FEATURES.map((f, i) => (
-                <motion.button key={i} type="button" onClick={() => setActiveFeature(i)}
-                  animate={{ scale: activeFeature === i ? 1.05 : 1, opacity: activeFeature === i ? 1 : 0.6 }}
-                  className="p-3 md:p-4 rounded-2xl text-center transition-all"
-                  style={{
-                    background: activeFeature === i ? 'rgba(124,158,255,0.1)' : 'rgba(255,255,255,0.02)',
-                    border: `1px solid ${activeFeature === i ? f.color + '40' : 'rgba(255,255,255,0.05)'}`,
-                  }}
-                  aria-pressed={activeFeature === i} aria-label={f.title}>
-                  <f.icon className="w-4 h-4 md:w-5 md:h-5 mx-auto mb-1.5 md:mb-2"
-                    style={{ color: activeFeature === i ? f.color : '#334155' }} />
-                  <p className="text-[9px] md:text-[10px] font-black uppercase tracking-wider leading-tight"
-                    style={{ color: activeFeature === i ? '#e2e8f0' : '#334155' }}>
-                    {f.title.split(' ').slice(0, 2).join(' ')}
-                  </p>
-                </motion.button>
-              ))}
+              {FEATURES.map((f, i) => {
+                const active = activeFeature === i;
+                return (
+                  <motion.button key={i} type="button" onClick={() => setActiveFeature(i)}
+                    animate={{ scale: active ? 1.03 : 1 }} whileHover={{ y: -2 }}
+                    className="p-3 md:p-4 rounded-2xl text-center transition-all"
+                    style={{
+                      background: active ? 'rgba(100,142,204,0.18)' : 'rgba(13,20,36,0.78)',
+                      border: `1px solid ${active ? 'rgba(100,142,204,0.3)' : 'rgba(122,158,218,0.16)'}`,
+                      boxShadow: active ? '0 8px 22px rgba(100,142,204,0.12)' : '0 1px 2px rgba(122,158,218,0.06)',
+                    }}
+                    aria-pressed={active} aria-label={f.title}>
+                    <f.icon className="w-4 h-4 md:w-5 md:h-5 mx-auto mb-1.5 md:mb-2"
+                      style={{ color: active ? '#7FA6DC' : '#697B96' }} />
+                    <p className="text-[10px] md:text-[11px] font-black uppercase tracking-wider leading-tight"
+                      style={{ color: active ? '#E7ECF5' : '#8B9CB5' }}>
+                      {f.title.split(' ').slice(0, 2).join(' ')}
+                    </p>
+                  </motion.button>
+                );
+              })}
             </div>
             <AnimatePresence mode="wait">
               <motion.div key={activeFeature} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }} className="mt-4 p-3 md:p-4 rounded-2xl text-center"
-                style={{ background: 'rgba(124,158,255,0.04)', border: `1px solid ${FEATURES[activeFeature].color}25` }}>
-                <p className="text-sm font-bold mb-1" style={{ color: '#e2e8f0' }}>{FEATURES[activeFeature].title}</p>
-                <p className="text-[12px] md:text-[13px] font-medium" style={{ color: '#94a3b8' }}>{FEATURES[activeFeature].desc}</p>
+                exit={{ opacity: 0, y: -8 }}
+                className="mt-4 md:mt-5 relative overflow-hidden rounded-2xl px-5 py-4 md:py-5 text-center"
+                style={{ background: '#0D1424', border: '1px solid rgba(122,158,218,0.16)', boxShadow: '0 6px 20px rgba(122,158,218,0.1)' }}>
+                <span className="absolute left-0 top-0 bottom-0 w-1" style={{ background: 'linear-gradient(180deg,#7FA6DC,#2E5082)' }} />
+                <p className="flex items-center justify-center gap-2 text-[15px] md:text-base font-extrabold" style={{ color: '#E7ECF5' }}>
+                  {FEATURES[activeFeature].title}
+                  <span className="text-[10px] font-black tracking-wider" style={{ color: '#697B96' }}>
+                    {(activeFeature + 1).toString().padStart(2, '0')} / {FEATURES.length.toString().padStart(2, '0')}
+                  </span>
+                </p>
+                <p className="text-[13px] md:text-[14px] font-medium mt-1" style={{ color: '#8B9CB5' }}>{FEATURES[activeFeature].desc}</p>
               </motion.div>
             </AnimatePresence>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.1 }}
+          {/* Single primary CTA */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.85 }}
             className="flex flex-col items-center space-y-4 px-4 w-full">
             <motion.button type="button" onClick={onContinue}
-              whileHover={{ scale: 1.05, boxShadow: '0 0 40px rgba(124,158,255,0.5)' }}
-              whileTap={{ scale: 0.97 }}
-              className="btn-primary rounded-2xl py-3.5 md:py-4 px-8 md:px-10 font-black text-base md:text-lg flex items-center space-x-3 w-full max-w-xs justify-center"
-              style={{ color: '#ffffff', boxShadow: '0 0 30px rgba(124,158,255,0.35)' }}>
+              whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+              className="btn-primary rounded-2xl py-4 px-10 md:px-12 font-black text-base md:text-lg flex items-center space-x-3 w-full max-w-xs justify-center"
+              style={{ color: '#FFFFFF' }}>
               <Rocket className="w-5 h-5" /><span>Launch ATLAS</span>
               <motion.div animate={{ x: [0, 5, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
                 <ArrowRight className="w-5 h-5" />
               </motion.div>
             </motion.button>
-            <p className="text-[11px] font-medium text-center" style={{ color: '#64748b' }}>
+            <p className="text-[11px] font-medium text-center" style={{ color: '#697B96' }}>
               Free · Bring your own API key · Session-only storage · Key never logged
             </p>
           </motion.div>
@@ -4202,7 +4236,7 @@ function WelcomeScreen({ onContinue }) {
 // BUG 14 FIX: links only shown when p.link && p.linkLabel
 // ============================================================
 
-function BootScreen({ onBoot, initialError = '' }) {
+function BootScreen({ onBoot, onBack, initialError = '' }) {
   const hook = useAPIVerification();
   const { apiKey, setApiKey, verifyStatus, verifiedConfig, selectedModel, detectedProvider, selectProvider, manualProvider } = hook;
   const [showKey, setShowKey] = useState(false);
@@ -4223,80 +4257,109 @@ function BootScreen({ onBoot, initialError = '' }) {
   }, [verifyStatus, verifiedConfig, apiKey, selectedModel, onBoot]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden" style={{ background: '#04050a' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden" style={{ background: '#0A1020' }}>
       <div className="aurora-bg" aria-hidden="true">
         <div className="aurora-orb aurora-orb-1" /><div className="aurora-orb aurora-orb-2" /><div className="aurora-orb aurora-orb-3" />
       </div>
       <div className="noise-overlay" aria-hidden="true" />
-      <motion.div initial={{ opacity: 0, y: 40, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+      {onBack && (
+        <div className="relative z-10 w-full max-w-md mb-3">
+          <button type="button" onClick={onBack} className="flex items-center space-x-2 text-sm font-semibold min-h-[44px] px-1 rounded-lg transition-colors hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F8ECC]/60" style={{ color: '#8B9CB5' }} aria-label="Back to home">
+            <ArrowLeft className="w-4 h-4" /><span>Back</span>
+          </button>
+        </div>
+      )}
+      <motion.div initial={{ opacity: 0, y: 40, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.7 }} className="relative w-full max-w-md z-10">
-        <div className="glass-panel rounded-3xl p-6 md:p-8 relative overflow-hidden">
+        <div className="glass-panel rounded-2xl p-6 md:p-8 relative overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-px"
-            style={{ background: 'linear-gradient(to right,transparent,rgba(124,158,255,0.6),transparent)' }} />
-          <div className="text-center mb-6">
+            style={{ background: 'linear-gradient(to right,transparent,rgba(100,142,204,0.5),transparent)' }} />
+
+          {/* Header */}
+          <div className="text-center mb-5">
             <div className="flex justify-center mb-4">
               <div className="relative">
-                <div className="absolute inset-0 rounded-2xl blur-xl scale-150" style={{ background: 'rgba(124,158,255,0.2)' }} />
-                <div className="relative p-4 rounded-2xl" style={{ background: 'linear-gradient(135deg,#7c9eff,#a78bfa)' }}>
+                <div className="absolute inset-0 rounded-2xl blur-xl scale-150" style={{ background: 'rgba(100,142,204,0.18)' }} />
+                <div className="relative p-4 rounded-2xl" style={{ background: 'linear-gradient(135deg,#3F6FB0,#2B4E80)', boxShadow: '0 8px 22px rgba(100,142,204,0.2)' }}>
                   <KeyRound className="w-7 h-7 md:w-8 md:h-8" style={{ color: '#ffffff' }} />
                 </div>
               </div>
             </div>
-            <h2 className="text-xl md:text-2xl font-black mb-1" style={{ color: '#e2e8f0' }}>Connect Your AI</h2>
-            <p className="text-sm font-medium" style={{ color: '#94a3b8' }}>Paste your API key to activate ATLAS</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1.5" style={{ color: '#7FA6DC' }}>
+              Step 1 · Connect your AI
+            </p>
+            <h2 className="text-xl md:text-2xl font-black mb-1" style={{ color: '#E7ECF5' }}>Activate ATLAS</h2>
+            <p className="text-sm font-medium" style={{ color: '#8B9CB5' }}>
+              Bring your own key — verified locally, in this tab.
+            </p>
             {initialError && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 p-3 rounded-xl text-left"
-                style={{ background: 'rgba(232,165,152,0.08)', border: '1px solid rgba(232,165,152,0.25)' }}>
-                <p className="text-[12px] font-medium" style={{ color: '#e8a598' }}>⚠ {initialError}</p>
+                style={{ background: 'rgba(224,138,128,0.1)', border: '1px solid rgba(224,138,128,0.3)' }}>
+                <p className="text-[12px] font-medium" style={{ color: '#E08A80' }}>⚠ {initialError}</p>
               </motion.div>
             )}
           </div>
 
-          {/* BUG 3 FIX: provider grid buttons are clickable */}
+          {/* Privacy explainer — why a key, what happens to it */}
+          <div className="mb-5 rounded-2xl p-4 text-left flex gap-3"
+            style={{ background: '#0D1424', border: '1px solid rgba(122,158,218,0.16)' }}>
+            <div className="rounded-xl p-2 flex-shrink-0" style={{ background: 'rgba(100,142,204,0.08)' }}>
+              <Shield className="w-4 h-4" style={{ color: '#7FA6DC' }} />
+            </div>
+            <div className="text-[12px] leading-relaxed" style={{ color: '#8B9CB5' }}>
+              <span className="font-extrabold" style={{ color: '#B7C6DC' }}>Why a key?</span> ATLAS runs entirely in
+              your browser — the key powers AI answers from the provider you choose. It is kept in this tab's session
+              only, never sent to an ATLAS server, and never logged.
+            </div>
+          </div>
+
+          {/* Provider grid */}
           <div className="grid grid-cols-2 gap-2 mb-4">
             {AI_PROVIDERS.filter(p => p.featured).map(p => {
               const isActive = detectedProvider === p.id || manualProvider === p.id;
               return (
                 <button key={p.id} type="button" onClick={() => selectProvider(p.id)}
-                  className="relative flex flex-col items-center p-3 rounded-2xl transition-all min-h-[72px]"
+                  className="relative flex flex-col items-center p-3 rounded-2xl transition-all min-h-[76px]"
                   style={{
-                    background: isActive ? p.gradient : 'rgba(255,255,255,0.02)',
-                    border: `1px solid ${isActive ? p.border : 'rgba(255,255,255,0.06)'}`, cursor: 'pointer',
+                    background: isActive ? p.gradient : '#0D1424',
+                    border: `1px solid ${isActive ? p.border : 'rgba(122,158,218,0.16)'}`, cursor: 'pointer',
+                    boxShadow: isActive ? '0 4px 14px rgba(100,142,204,0.1)' : '0 1px 2px rgba(122,158,218,0.06)',
                   }}
                   aria-pressed={isActive} aria-label={`Select ${p.name}`}>
                   <div className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-black"
-                    style={{ background: p.badgeBg, color: p.badgeColor, border: `1px solid ${p.badgeColor}33` }}>
+                    style={{ background: p.badgeBg, color: p.badgeColor, border: `1px solid ${p.badgeColor}40` }}>
                     {p.badge}
                   </div>
-                  <span className="text-xl mb-1" style={{ color: isActive ? p.color : '#334155' }}>{p.icon}</span>
+                  <span className="text-xl mb-1" style={{ color: isActive ? p.color : '#697B96' }}>{p.icon}</span>
                   <span className="text-[10px] font-black text-center leading-tight"
-                    style={{ color: isActive ? '#e2e8f0' : '#94a3b8' }}>{p.name}</span>
+                    style={{ color: isActive ? '#E7ECF5' : '#8B9CB5' }}>{p.name}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* BUG 14 FIX: only show links where both link AND linkLabel exist */}
+          {/* Get-key links */}
           <div className="flex flex-wrap gap-1.5 mb-4">
             {AI_PROVIDERS.filter(p => p.featured && p.link && p.linkLabel).map(p => (
               <a key={p.id} href={p.link} target="_blank" rel="noopener noreferrer"
-                className="flex items-center space-x-1 text-[11px] font-bold px-2 py-1 rounded-lg hover:opacity-80"
-                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: p.color }}>
+                className="flex items-center space-x-1 text-[11px] font-bold px-2.5 py-1.5 rounded-lg hover:opacity-75"
+                style={{ background: '#0D1424', border: '1px solid rgba(122,158,218,0.16)', color: p.color }}>
                 <span>{p.icon}</span><span>{p.linkLabel}</span><ExternalLink className="w-2.5 h-2.5" />
               </a>
             ))}
           </div>
 
+          {/* API key input */}
           <div className="relative mb-4">
-            <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#64748b' }} />
+            <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#697B96' }} />
             <input type={showKey ? 'text' : 'password'} placeholder="Paste API key — auto-detected & verified"
               value={apiKey} onChange={e => setApiKey(e.target.value)} autoComplete="off" spellCheck="false"
-              className="w-full atlas-input rounded-2xl pl-11 pr-12 py-3.5 text-sm placeholder-slate-700 font-medium"
-              style={{ color: '#e2e8f0' }} aria-label="API key input" />
+              className="w-full atlas-input rounded-2xl pl-11 pr-12 py-3.5 text-sm placeholder-slate-400 font-medium"
+              style={{ color: '#E7ECF5' }} aria-label="API key input" />
             {apiKey && (
               <button type="button" onClick={() => setShowKey(p => !p)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg min-h-[32px] min-w-[32px] flex items-center justify-center"
-                style={{ color: '#64748b' }} aria-label={showKey ? 'Hide API key' : 'Show API key'}>
+                style={{ color: '#697B96' }} aria-label={showKey ? 'Hide API key' : 'Show API key'}>
                 {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </button>
             )}
@@ -4309,14 +4372,14 @@ function BootScreen({ onBoot, initialError = '' }) {
             className="w-full btn-primary rounded-2xl py-3.5 md:py-4 px-6 flex items-center justify-center space-x-2.5 font-bold disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]"
             style={{ color: '#ffffff' }}>
             {verifyStatus === 'verifying' ? (
-              <><motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}><Shield className="w-5 h-5" /></motion.div><span>Verifying...</span></>
+              <><motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}><Shield className="w-5 h-5" /></motion.div><span>Verifying…</span></>
             ) : verifyStatus === 'success' ? (
               <><Rocket className="w-5 h-5" /><span>Enter ATLAS</span><motion.div animate={{ x: [0, 4, 0] }} transition={{ duration: 1.4, repeat: Infinity }}><ArrowRight className="w-5 h-5" /></motion.div></>
             ) : (
               <><KeyRound className="w-5 h-5" /><span>Paste API Key to Continue</span></>
             )}
           </motion.button>
-          <p className="text-center text-[11px] mt-3" style={{ color: '#64748b' }}>
+          <p className="text-center text-[11px] mt-3" style={{ color: '#697B96' }}>
             🔒 Session-only storage · Cleared on tab close · Never logged
           </p>
         </div>
@@ -4359,31 +4422,31 @@ function ChangeAPIPanel({ onClose, currentConfig, onUpdate }) {
     <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
       transition={{ type: 'spring', stiffness: 300, damping: 35 }}
       className="fixed right-0 top-0 h-full w-full max-w-sm z-[9000] overflow-y-auto"
-      style={{ background: '#0a0b12', border: '1px solid rgba(124,158,255,0.2)' }}
+      style={{ background: '#0A1020', border: '1px solid rgba(100,142,204,0.16)' }}
       role="dialog" aria-label="Change AI Provider">
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-2">
-            <KeyRound className="w-5 h-5" style={{ color: '#7c9eff' }} />
-            <span className="font-black" style={{ color: '#e2e8f0' }}>Change AI Provider</span>
+            <KeyRound className="w-5 h-5" style={{ color: '#5F8ECC' }} />
+            <span className="font-black" style={{ color: '#E7ECF5' }}>Change AI Provider</span>
           </div>
           <button type="button" onClick={onClose}
             className="p-2 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center"
-            style={{ background: 'rgba(255,255,255,0.05)', color: '#94a3b8' }} aria-label="Close">
+            style={{ background: '#0D1424', color: '#8B9CB5' }} aria-label="Close">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {currentProv && (
           <div className="mb-5 p-4 rounded-2xl"
-            style={{ background: 'rgba(124,158,255,0.06)', border: '1px solid rgba(124,158,255,0.15)' }}>
-            <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: '#7c9eff' }}>Currently Active</p>
+            style={{ background: 'rgba(100,142,204,0.06)', border: '1px solid rgba(100,142,204,0.12)' }}>
+            <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: '#5F8ECC' }}>Currently Active</p>
             <div className="flex items-center space-x-3">
               <span className="text-2xl">{currentProv.icon}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-black" style={{ color: '#e2e8f0' }}>{currentConfig?.detectedName || currentProv.name}</p>
-                <p className="text-[11px] truncate" style={{ color: '#94a3b8' }}>{currentConfig?.model}</p>
-                <p className="text-[10px] mt-0.5 font-mono" style={{ color: '#64748b' }}>
+                <p className="text-sm font-black" style={{ color: '#E7ECF5' }}>{currentConfig?.detectedName || currentProv.name}</p>
+                <p className="text-[11px] truncate" style={{ color: '#8B9CB5' }}>{currentConfig?.model}</p>
+                <p className="text-[10px] mt-0.5 font-mono" style={{ color: '#697B96' }}>
                   {maskApiKey(currentConfig?.apiKey || '', currentProv.noKey)}
                 </p>
               </div>
@@ -4407,19 +4470,19 @@ function ChangeAPIPanel({ onClose, currentConfig, onUpdate }) {
               <button key={p.id} type="button" onClick={() => selectProvider(p.id)}
                 className="relative flex flex-col items-center p-3 rounded-2xl transition-all min-h-[64px]"
                 style={{
-                  background: isActive ? (p.gradient || 'rgba(124,158,255,0.15)') : 'rgba(255,255,255,0.02)',
-                  border: `1px solid ${isActive ? (p.border || 'rgba(124,158,255,0.3)') : 'rgba(255,255,255,0.06)'}`,
+                  background: isActive ? (p.gradient || 'rgba(100,142,204,0.12)') : 'rgba(13,20,36,0.78)',
+                  border: `1px solid ${isActive ? (p.border || 'rgba(100,142,204,0.24)') : 'rgba(100,142,204,0.12)'}`,
                   cursor: 'pointer',
                 }}
                 aria-pressed={isActive} aria-label={`Select ${p.name}`}>
                 {p.badge && (
-                  <div className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-black"
+                  <div className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-black"
                     style={{ background: p.badgeBg || 'rgba(134,223,186,0.15)', color: p.badgeColor || '#86dfba', border: `1px solid ${(p.badgeColor || '#86dfba')}33` }}>
                     {p.badge}
                   </div>
                 )}
-                <span className="text-lg mb-1" style={{ color: isActive ? p.color : '#334155' }}>{p.icon}</span>
-                <span className="text-[10px] font-black text-center" style={{ color: isActive ? '#e2e8f0' : '#94a3b8' }}>{p.name}</span>
+                <span className="text-lg mb-1" style={{ color: isActive ? p.color : '#697B96' }}>{p.icon}</span>
+                <span className="text-[10px] font-black text-center" style={{ color: isActive ? '#E7ECF5' : '#8B9CB5' }}>{p.name}</span>
               </button>
             );
           })}
@@ -4430,22 +4493,22 @@ function ChangeAPIPanel({ onClose, currentConfig, onUpdate }) {
           {AI_PROVIDERS.filter(p => p.featured && p.link && p.linkLabel).map(p => (
             <a key={p.id} href={p.link} target="_blank" rel="noopener noreferrer"
               className="flex items-center space-x-1 text-[11px] font-bold px-2 py-1 rounded-lg hover:opacity-80"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: p.color }}>
+              style={{ background: 'rgba(13,20,36,0.9)', border: '1px solid rgba(100,142,204,0.12)', color: p.color }}>
               <span>{p.icon}</span><span>{p.linkLabel}</span><ExternalLink className="w-2.5 h-2.5" />
             </a>
           ))}
         </div>
 
         <div className="relative mb-4">
-          <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#64748b' }} />
+          <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#697B96' }} />
           <input type={showKey ? 'text' : 'password'} placeholder="Paste new API key"
             value={apiKey} onChange={e => setApiKey(e.target.value)} autoComplete="off" spellCheck="false"
-            className="w-full atlas-input rounded-2xl pl-11 pr-12 py-3.5 text-sm placeholder-slate-700 font-medium"
-            style={{ color: '#e2e8f0' }} aria-label="New API key" />
+            className="w-full atlas-input rounded-2xl pl-11 pr-12 py-3.5 text-sm placeholder-slate-400 font-medium"
+            style={{ color: '#E7ECF5' }} aria-label="New API key" />
           {apiKey && (
             <button type="button" onClick={() => setShowKey(p => !p)}
               className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg min-h-[32px] min-w-[32px] flex items-center justify-center"
-              style={{ color: '#64748b' }} aria-label={showKey ? 'Hide API key' : 'Show API key'}>
+              style={{ color: '#697B96' }} aria-label={showKey ? 'Hide API key' : 'Show API key'}>
               {showKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             </button>
           )}
@@ -4576,7 +4639,7 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
   }, [effectiveMinTarget]);
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ background: '#04050a' }}>
+    <div className="min-h-screen relative overflow-hidden" style={{ background: '#0A1020' }}>
       <div className="aurora-bg" aria-hidden="true">
         <div className="aurora-orb aurora-orb-1" /><div className="aurora-orb aurora-orb-2" /><div className="aurora-orb aurora-orb-3" />
       </div>
@@ -4584,14 +4647,14 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Top nav */}
         <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4"
-          style={{ background: 'rgba(4,5,10,0.8)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          style={{ background: 'rgba(10,16,32,0.82)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(122,158,218,0.16)' }}>
           <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-xl" style={{ background: 'linear-gradient(135deg,#7c9eff,#a78bfa)' }}>
+            <div className="p-2 rounded-xl" style={{ background: 'linear-gradient(135deg,#3F6FB0,#2B4E80)' }}>
               <Telescope className="w-4 h-4 md:w-5 md:h-5" style={{ color: '#ffffff' }} />
             </div>
             <div>
-              <span className="font-black text-base md:text-lg" style={{ color: '#e2e8f0' }}>ATLAS</span>
-              <span className="text-xs font-bold ml-2 hidden sm:inline" style={{ color: '#64748b' }}>KTU Vault Pro</span>
+              <span className="font-black text-base md:text-lg" style={{ color: '#E7ECF5' }}>ATLAS</span>
+              <span className="text-xs font-bold ml-2 hidden sm:inline" style={{ color: '#697B96' }}>KTU Vault Pro</span>
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -4607,11 +4670,11 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
             {providerInfo && (
               <motion.button type="button" onClick={onChangeAPI} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
                 className="flex items-center space-x-2 px-3 py-1.5 rounded-full min-h-[40px]"
-                style={{ background: 'rgba(124,158,255,0.08)', border: '1px solid rgba(124,158,255,0.2)' }}
+                style={{ background: 'rgba(100,142,204,0.07)', border: '1px solid rgba(100,142,204,0.16)' }}
                 aria-label="Change AI provider">
                 <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#86dfba', boxShadow: '0 0 6px #86dfba' }} />
                 <span className="text-sm">{providerInfo.icon}</span>
-                <span className="text-[11px] font-black hidden sm:block" style={{ color: '#7c9eff' }}>{providerInfo.name}</span>
+                <span className="text-[11px] font-black hidden sm:block" style={{ color: '#5F8ECC' }}>{providerInfo.name}</span>
               </motion.button>
             )}
           </div>
@@ -4619,11 +4682,12 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
 
         <div className="flex-1 flex flex-col items-center justify-center px-4 py-6 md:py-8">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-6 md:mb-8">
-            <h1 className="text-2xl md:text-4xl font-black mb-2" style={{ color: '#e2e8f0' }}>
+            <p className="text-[11px] font-black uppercase tracking-[0.3em] mb-3" style={{ color: '#8B9CB5' }}>Prepare</p>
+            <h1 className="text-2xl md:text-4xl font-black mb-2" style={{ color: '#E7ECF5' }}>
               What are you{' '}
-              <span style={{ background: 'linear-gradient(135deg,#7c9eff,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>studying today?</span>
+              <span style={{ background: 'linear-gradient(135deg,#3F6FB0,#2B4E80)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>studying today?</span>
             </h1>
-            <p className="text-sm font-medium" style={{ color: '#94a3b8' }}>Select your subject in 5 steps — ATLAS does the rest</p>
+            <p className="text-sm font-medium" style={{ color: '#8B9CB5' }}>Select your subject in 5 steps — ATLAS does the rest</p>
           </motion.div>
 
           {/* Step indicators */}
@@ -4634,15 +4698,15 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
                   onClick={() => goToStep(s.id)} disabled={!canGoToStep(s.id)}
                   className="flex items-center space-x-1 md:space-x-1.5 px-2 md:px-3 py-1.5 rounded-xl transition-all flex-shrink-0 min-h-[44px] disabled:opacity-30 disabled:cursor-not-allowed"
                   style={{
-                    background: step === s.id ? 'rgba(124,158,255,0.2)' : i < step ? 'rgba(134,223,186,0.1)' : 'rgba(255,255,255,0.03)',
-                    border: `1px solid ${step === s.id ? 'rgba(124,158,255,0.5)' : i < step ? 'rgba(134,223,186,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                    background: step === s.id ? 'rgba(100,142,204,0.16)' : i < step ? 'rgba(134,223,186,0.1)' : 'rgba(13,20,36,0.9)',
+                    border: `1px solid ${step === s.id ? 'rgba(100,142,204,0.4)' : i < step ? 'rgba(134,223,186,0.3)' : 'rgba(100,142,204,0.12)'}`,
                   }}>
                   {i < step ? <CheckCircle className="w-3 h-3 md:w-3.5 md:h-3.5" style={{ color: '#86dfba' }} />
-                    : <s.icon className="w-3 h-3 md:w-3.5 md:h-3.5" style={{ color: step === s.id ? '#a5b4fc' : '#334155' }} />}
+                    : <s.icon className="w-3 h-3 md:w-3.5 md:h-3.5" style={{ color: step === s.id ? '#9BB9E0' : '#697B96' }} />}
                   <span className="text-[10px] md:text-[11px] font-black"
-                    style={{ color: step === s.id ? '#a5b4fc' : i < step ? '#86dfba' : '#334155' }}>{s.label}</span>
+                    style={{ color: step === s.id ? '#9BB9E0' : i < step ? '#86dfba' : '#697B96' }}>{s.label}</span>
                 </button>
-                {i < steps.length - 1 && <ChevronRight className="w-3 h-3 flex-shrink-0" style={{ color: '#334155' }} />}
+                {i < steps.length - 1 && <ChevronRight className="w-3 h-3 flex-shrink-0" style={{ color: '#697B96' }} />}
               </React.Fragment>
             ))}
           </div>
@@ -4652,8 +4716,8 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
               {step === 0 && (
                 <motion.div key="scheme" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
                   <div className="text-center mb-6">
-                    <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: '#64748b' }}>Step 1 of 5</p>
-                    <h2 className="text-xl md:text-2xl font-black" style={{ color: '#e2e8f0' }}>Select Your Scheme</h2>
+                    <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: '#697B96' }}>Step 1 of 5</p>
+                    <h2 className="text-xl md:text-2xl font-black" style={{ color: '#E7ECF5' }}>Select Your Scheme</h2>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {['2024','2019'].map(s => (
@@ -4661,13 +4725,13 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
                         whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                         className="p-6 md:p-8 rounded-3xl text-center transition-all min-h-[120px]"
                         style={{
-                          background: scheme === s ? 'linear-gradient(135deg,rgba(124,158,255,0.2),rgba(167,139,250,0.15))' : 'rgba(255,255,255,0.03)',
-                          border: `2px solid ${scheme === s ? 'rgba(124,158,255,0.5)' : 'rgba(255,255,255,0.07)'}`,
-                          boxShadow: scheme === s ? '0 0 30px rgba(124,158,255,0.2)' : 'none',
+                          background: scheme === s ? 'linear-gradient(135deg,rgba(100,142,204,0.14),rgba(100,142,204,0.06))' : 'rgba(13,20,36,0.9)',
+                          border: `2px solid ${scheme === s ? 'rgba(100,142,204,0.4)' : 'rgba(122,158,218,0.2)'}`,
+                          boxShadow: scheme === s ? '0 0 30px rgba(100,142,204,0.16)' : 'none',
                         }} aria-pressed={scheme === s}>
-                        <div className="text-4xl md:text-5xl font-black mb-2" style={{ color: scheme === s ? '#a5b4fc' : '#334155' }}>{s}</div>
-                        <div className="text-sm font-bold" style={{ color: scheme === s ? '#7c9eff' : '#94a3b8' }}>KTU Scheme</div>
-                        <div className="text-[11px] mt-2 font-medium" style={{ color: scheme === s ? '#a78bfa' : '#334155' }}>
+                        <div className="text-4xl md:text-5xl font-black mb-2" style={{ color: scheme === s ? '#9BB9E0' : '#697B96' }}>{s}</div>
+                        <div className="text-sm font-bold" style={{ color: scheme === s ? '#5F8ECC' : '#8B9CB5' }}>KTU Scheme</div>
+                        <div className="text-[11px] mt-2 font-medium" style={{ color: scheme === s ? '#3D5F94' : '#697B96' }}>
                           {SCHEME_RULES[s]?.note?.slice(0,60) || (s === '2024' ? 'Ext: 60 · Pass: 50 total' : 'Ext: 100 · Pass: 75 total')}
                         </div>
                       </motion.button>
@@ -4678,8 +4742,8 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
               {step === 1 && (
                 <motion.div key="dept" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
                   <div className="text-center mb-6">
-                    <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: '#64748b' }}>Step 2 of 5</p>
-                    <h2 className="text-xl md:text-2xl font-black" style={{ color: '#e2e8f0' }}>Select Department</h2>
+                    <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: '#697B96' }}>Step 2 of 5</p>
+                    <h2 className="text-xl md:text-2xl font-black" style={{ color: '#E7ECF5' }}>Select Department</h2>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {depts.map(d => (
@@ -4687,12 +4751,12 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
                         whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                         className="p-4 md:p-5 rounded-2xl text-left transition-all min-h-[80px]"
                         style={{
-                          background: dept === d ? 'linear-gradient(135deg,rgba(124,158,255,0.2),rgba(167,139,250,0.1))' : 'rgba(255,255,255,0.03)',
-                          border: `1px solid ${dept === d ? 'rgba(124,158,255,0.5)' : 'rgba(255,255,255,0.07)'}`,
+                          background: dept === d ? 'linear-gradient(135deg,rgba(100,142,204,0.16),rgba(100,142,204,0.05))' : 'rgba(13,20,36,0.9)',
+                          border: `1px solid ${dept === d ? 'rgba(100,142,204,0.4)' : 'rgba(122,158,218,0.2)'}`,
                         }} aria-pressed={dept === d}>
-                        <GraduationCap className="w-5 h-5 mb-2" style={{ color: dept === d ? '#a5b4fc' : '#334155' }} />
-                        <div className="text-sm font-black" style={{ color: dept === d ? '#a5b4fc' : '#94a3b8' }}>{d}</div>
-                        <div className="text-[11px] font-medium mt-0.5" style={{ color: dept === d ? '#a78bfa' : '#334155' }}>{deptNames[d] || d}</div>
+                        <GraduationCap className="w-5 h-5 mb-2" style={{ color: dept === d ? '#9BB9E0' : '#697B96' }} />
+                        <div className="text-sm font-black" style={{ color: dept === d ? '#9BB9E0' : '#8B9CB5' }}>{d}</div>
+                        <div className="text-[11px] font-medium mt-0.5" style={{ color: dept === d ? '#3D5F94' : '#697B96' }}>{deptNames[d] || d}</div>
                       </motion.button>
                     ))}
                   </div>
@@ -4701,8 +4765,8 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
               {step === 2 && (
                 <motion.div key="sem" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
                   <div className="text-center mb-6">
-                    <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: '#64748b' }}>Step 3 of 5</p>
-                    <h2 className="text-xl md:text-2xl font-black" style={{ color: '#e2e8f0' }}>Select Semester</h2>
+                    <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: '#697B96' }}>Step 3 of 5</p>
+                    <h2 className="text-xl md:text-2xl font-black" style={{ color: '#E7ECF5' }}>Select Semester</h2>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {semesters.map(s => (
@@ -4710,11 +4774,11 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
                         whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                         className="p-4 md:p-5 rounded-2xl text-center transition-all min-h-[80px]"
                         style={{
-                          background: semester === s ? 'rgba(124,158,255,0.2)' : 'rgba(255,255,255,0.03)',
-                          border: `1px solid ${semester === s ? 'rgba(124,158,255,0.5)' : 'rgba(255,255,255,0.07)'}`,
+                          background: semester === s ? 'rgba(100,142,204,0.16)' : 'rgba(13,20,36,0.9)',
+                          border: `1px solid ${semester === s ? 'rgba(100,142,204,0.4)' : 'rgba(122,158,218,0.2)'}`,
                         }} aria-pressed={semester === s}>
-                        <div className="text-xl md:text-2xl font-black mb-1" style={{ color: semester === s ? '#a5b4fc' : '#334155' }}>{s.replace('S','')}</div>
-                        <div className="text-[11px] font-bold" style={{ color: semester === s ? '#a78bfa' : '#334155' }}>{s}</div>
+                        <div className="text-xl md:text-2xl font-black mb-1" style={{ color: semester === s ? '#9BB9E0' : '#697B96' }}>{s.replace('S','')}</div>
+                        <div className="text-[11px] font-bold" style={{ color: semester === s ? '#3D5F94' : '#697B96' }}>{s}</div>
                       </motion.button>
                     ))}
                   </div>
@@ -4723,8 +4787,8 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
               {step === 3 && (
                 <motion.div key="subject" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
                   <div className="text-center mb-6">
-                    <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: '#64748b' }}>Step 4 of 5</p>
-                    <h2 className="text-xl md:text-2xl font-black" style={{ color: '#e2e8f0' }}>Select Subject</h2>
+                    <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: '#697B96' }}>Step 4 of 5</p>
+                    <h2 className="text-xl md:text-2xl font-black" style={{ color: '#E7ECF5' }}>Select Subject</h2>
                   </div>
                   <div className="space-y-2 max-h-72 md:max-h-80 overflow-y-auto">
                     {subjects.map(s => {
@@ -4734,20 +4798,20 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
                           whileHover={{ scale: cs ? 1 : 1.01 }} whileTap={{ scale: cs ? 1 : 0.99 }}
                           className="w-full text-left px-4 md:px-5 py-3 md:py-4 rounded-2xl transition-all min-h-[60px]"
                           style={{
-                            background: subject === s ? 'linear-gradient(135deg,rgba(124,158,255,0.2),rgba(167,139,250,0.1))' : 'rgba(255,255,255,0.02)',
-                            border: `1px solid ${subject === s ? 'rgba(124,158,255,0.5)' : 'rgba(255,255,255,0.06)'}`,
+                            background: subject === s ? 'linear-gradient(135deg,rgba(100,142,204,0.16),rgba(100,142,204,0.05))' : 'rgba(13,20,36,0.78)',
+                            border: `1px solid ${subject === s ? 'rgba(100,142,204,0.4)' : 'rgba(100,142,204,0.12)'}`,
                             cursor: cs ? 'not-allowed' : 'pointer', opacity: cs ? 0.4 : 1,
                           }} aria-pressed={subject === s} aria-disabled={cs}>
                           <div className="flex items-center justify-between">
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-black truncate" style={{ color: subject === s ? '#c4b5fd' : '#94a3b8' }}>{s}</p>
-                              {det.pyq && !cs && <p className="text-[10px] mt-0.5 truncate" style={{ color: '#64748b' }}>{det.pyq.slice(0,55)}...</p>}
+                              <p className="text-xs font-black truncate" style={{ color: subject === s ? '#5F8ECC' : '#8B9CB5' }}>{s}</p>
+                              {det.pyq && !cs && <p className="text-[10px] mt-0.5 truncate" style={{ color: '#697B96' }}>{det.pyq.slice(0,55)}...</p>}
                             </div>
                             <div className="flex items-center space-x-2 ml-3 flex-shrink-0">
-                              {cs && <span className="text-[10px] font-black" style={{ color: '#334155' }}>🔒 SOON</span>}
-                              {isDraw && !cs && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(167,139,250,0.1)', color: '#c4b5fd', border: '1px solid rgba(167,139,250,0.2)' }}>📐</span>}
+                              {cs && <span className="text-[10px] font-black" style={{ color: '#697B96' }}>🔒 SOON</span>}
+                              {isDraw && !cs && <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(123,167,222,0.08)', color: '#7BA7DE', border: '1px solid rgba(123,167,222,0.24)' }}>📐</span>}
                               {det.isNumerical && !cs && <span className="atlas-tag atlas-tag-amber">NUM</span>}
-                              {subject === s && <CheckCircle className="w-4 h-4" style={{ color: '#7c9eff' }} />}
+                              {subject === s && <CheckCircle className="w-4 h-4" style={{ color: '#5F8ECC' }} />}
                             </div>
                           </div>
                         </motion.button>
@@ -4759,9 +4823,9 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
               {step === 4 && (
                 <motion.div key="exam" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
                   <div className="text-center mb-6">
-                    <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: '#64748b' }}>Step 5 of 5</p>
-                    <h2 className="text-xl md:text-2xl font-black" style={{ color: '#e2e8f0' }}>Exam Type &amp; Target</h2>
-                    {subject && <p className="text-[12px] font-bold mt-1" style={{ color: '#7c9eff' }}>{subject.split('-')[0].trim()}</p>}
+                    <p className="text-xs font-black uppercase tracking-widest mb-2" style={{ color: '#697B96' }}>Step 5 of 5</p>
+                    <h2 className="text-xl md:text-2xl font-black" style={{ color: '#E7ECF5' }}>Exam Type &amp; Target</h2>
+                    {subject && <p className="text-[12px] font-bold mt-1" style={{ color: '#5F8ECC' }}>{subject.split('-')[0].trim()}</p>}
                   </div>
                   <div className="space-y-4 md:space-y-5">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -4770,11 +4834,11 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
                         <button key={et.id} type="button" onClick={() => setExamType(et.id)}
                           className="p-4 md:p-5 rounded-2xl text-left transition-all min-h-[80px]"
                           style={{
-                            background: examType === et.id ? 'rgba(124,158,255,0.15)' : 'rgba(255,255,255,0.02)',
-                            border: `2px solid ${examType === et.id ? 'rgba(124,158,255,0.5)' : 'rgba(255,255,255,0.06)'}`,
+                            background: examType === et.id ? 'rgba(100,142,204,0.12)' : 'rgba(13,20,36,0.78)',
+                            border: `2px solid ${examType === et.id ? 'rgba(100,142,204,0.4)' : 'rgba(100,142,204,0.12)'}`,
                           }} aria-pressed={examType === et.id}>
-                          <p className="text-sm font-black mb-1" style={{ color: examType === et.id ? '#a5b4fc' : '#94a3b8' }}>{et.label}</p>
-                          <p className="text-[11px]" style={{ color: examType === et.id ? '#a78bfa' : '#334155' }}>{et.desc}</p>
+                          <p className="text-sm font-black mb-1" style={{ color: examType === et.id ? '#9BB9E0' : '#8B9CB5' }}>{et.label}</p>
+                          <p className="text-[11px]" style={{ color: examType === et.id ? '#3D5F94' : '#697B96' }}>{et.desc}</p>
                         </button>
                       ))}
                     </div>
@@ -4796,12 +4860,12 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
 
                     {examType === 'semester' && (
                       <div>
-                        <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#94a3b8' }}>
+                        <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#8B9CB5' }}>
                           Your Internal / CE Marks <span style={{ color: '#e8a598' }}>*</span>
                         </label>
                         <input type="number" placeholder={`0–${rules.internalMax}`} min="0" max={rules.internalMax}
                           value={internalMarks} onChange={e => setInternalMarks(e.target.value)}
-                          className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium" style={{ color: '#e2e8f0' }} />
+                          className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium" style={{ color: '#E7ECF5' }} />
                         {internalMarks !== '' && (
                           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                             className="text-[11px] font-bold mt-1.5 ml-1"
@@ -4815,7 +4879,7 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
                     )}
 
                     <div>
-                      <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#94a3b8' }}>
+                      <label className="text-[11px] font-black uppercase tracking-widest block mb-2" style={{ color: '#8B9CB5' }}>
                         {examType === 'semester'
                           ? <>Target External Marks <span style={{ color: '#e8a598' }}>*</span> (min {effectiveMinTarget}, max {rules.externalMax})</>
                           : <>Target Marks <span style={{ color: '#e8a598' }}>*</span></>}
@@ -4825,7 +4889,7 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
                         min={examType === 'semester' ? effectiveMinTarget : undefined}
                         max={examType === 'semester' ? rules.externalMax : undefined}
                         value={targetMark} onChange={e => setTargetMark(e.target.value)}
-                        className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium" style={{ color: '#e2e8f0' }} />
+                        className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium" style={{ color: '#E7ECF5' }} />
                       {examType === 'semester' && targetMark !== '' && parseInt(targetMark) < effectiveMinTarget && (
                         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                           className="text-[11px] font-bold mt-1.5 ml-1" style={{ color: '#e8a598' }}>
@@ -4838,9 +4902,9 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
                             <button key={t} type="button" onClick={() => setTargetMark(String(t))}
                               className="flex-1 py-1.5 rounded-xl text-[11px] font-black transition-all min-h-[40px]"
                               style={{
-                                background: targetMark === String(t) ? 'rgba(124,158,255,0.2)' : 'rgba(255,255,255,0.03)',
-                                border: `1px solid ${targetMark === String(t) ? 'rgba(124,158,255,0.5)' : 'rgba(255,255,255,0.07)'}`,
-                                color: targetMark === String(t) ? '#a5b4fc' : '#64748b',
+                                background: targetMark === String(t) ? 'rgba(100,142,204,0.16)' : 'rgba(13,20,36,0.9)',
+                                border: `1px solid ${targetMark === String(t) ? 'rgba(100,142,204,0.4)' : 'rgba(122,158,218,0.2)'}`,
+                                color: targetMark === String(t) ? '#9BB9E0' : '#697B96',
                               }}>{t}</button>
                           ))}
                         </div>
@@ -4882,7 +4946,7 @@ function DashboardScreen({ onStartStudy, aiConfig, onChangeAPI, onShowBookmarks,
           {step > 0 && (
             <motion.button type="button" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
               onClick={() => setStep(p => p - 1)}
-              className="mt-6 flex items-center space-x-2 text-sm font-bold min-h-[44px]" style={{ color: '#64748b' }}>
+              className="mt-6 flex items-center space-x-2 text-sm font-bold min-h-[44px]" style={{ color: '#697B96' }}>
               <ArrowLeft className="w-4 h-4" /><span>Back</span>
             </motion.button>
           )}
@@ -4964,7 +5028,7 @@ function StudyScreen({ config, callAI, aiConfig, onBack, onRevision, onChangeAPI
   const studiedB = partBQs.filter(q => studiedIds.has(q.id)).length;
 
   return (
-    <div className={`min-h-screen relative overflow-x-hidden ${focusMode ? 'focus-mode' : ''}`} style={{ background: '#04050a' }}>
+    <div className={`min-h-screen relative overflow-x-hidden ${focusMode ? 'focus-mode' : ''}`} style={{ background: '#0A1020' }}>
       <div className="aurora-bg" aria-hidden="true"><div className="aurora-orb aurora-orb-1" /><div className="aurora-orb aurora-orb-2" /><div className="aurora-orb aurora-orb-3" /></div>
       <div className="noise-overlay" aria-hidden="true" />
       <ReadingProgressBar />
@@ -4976,23 +5040,23 @@ function StudyScreen({ config, callAI, aiConfig, onBack, onRevision, onChangeAPI
 
       <div className="relative z-10 max-w-4xl mx-auto px-3 md:px-4 pb-32">
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }}
-          className="sticky top-0 z-50 py-2 md:py-3" style={{ background: 'rgba(4,5,10,0.92)', backdropFilter: 'blur(20px)' }}>
+          className="sticky top-0 z-50 py-2 md:py-3" style={{ background: 'rgba(10,16,32,0.88)', backdropFilter: 'blur(20px)' }}>
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <button type="button" onClick={onBack} className="flex items-center space-x-2 text-sm font-semibold min-h-[44px]" style={{ color: '#94a3b8' }} aria-label="Back to dashboard">
-              <ArrowLeft className="w-4 h-4" /><span className="hidden sm:block">Dashboard</span>
+            <button type="button" onClick={onBack} className="flex items-center space-x-2 text-sm font-semibold min-h-[44px] rounded-lg transition-colors hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F8ECC]/60" style={{ color: '#8B9CB5' }} aria-label="Back to dashboard">
+              <ArrowLeft className="w-4 h-4" /><span className="hidden sm:block">Back</span>
             </button>
             <div className="flex items-center space-x-1.5 flex-wrap gap-1">
               {[
-                { icon: Target, label: 'Target', onClick: () => setShowTarget(true), color: '#a5b4fc', active: isTargetMode },
+                { icon: Target, label: 'Target', onClick: () => setShowTarget(true), color: '#9BB9E0', active: isTargetMode },
                 { icon: GraduationCap, label: 'CIE', onClick: () => setShowCIE(true), color: '#86dfba' },
                 { icon: Calendar, label: 'Plan', onClick: () => setShowScheduler(true), color: '#f0c987' },
-                { icon: MessageCircle, label: 'Tutor', onClick: () => setShowChatbot(true), color: '#c4b5fd' },
-                { icon: Focus, label: 'Focus', onClick: handleFocusToggle, color: focusMode ? '#86dfba' : '#94a3b8', active: focusMode },
+                { icon: MessageCircle, label: 'Tutor', onClick: () => setShowChatbot(true), color: '#5F8ECC' },
+                { icon: Focus, label: 'Focus', onClick: handleFocusToggle, color: focusMode ? '#86dfba' : '#8B9CB5', active: focusMode },
               ].map(btn => (
                 <motion.button key={btn.label} type="button" onClick={btn.onClick}
                   whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                   className="flex items-center space-x-1 md:space-x-1.5 px-2 md:px-2.5 py-1.5 rounded-xl text-[11px] md:text-[12px] font-bold min-h-[40px]"
-                  style={{ background: btn.active ? 'rgba(124,158,255,0.15)' : 'rgba(255,255,255,0.04)', border: `1px solid ${btn.active ? 'rgba(124,158,255,0.35)' : 'rgba(255,255,255,0.08)'}`, color: btn.color }}
+                  style={{ background: btn.active ? 'rgba(100,142,204,0.12)' : 'rgba(19,27,45,0.94)', border: `1px solid ${btn.active ? 'rgba(100,142,204,0.28)' : '#0D1424'}`, color: btn.color }}
                   aria-label={btn.label} aria-pressed={!!btn.active}>
                   <btn.icon className="w-3.5 h-3.5" /><span className="hidden sm:block">{btn.label}</span>
                 </motion.button>
@@ -5008,7 +5072,7 @@ function StudyScreen({ config, callAI, aiConfig, onBack, onRevision, onChangeAPI
               {providerInfo && (
                 <motion.button type="button" onClick={onChangeAPI} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
                   className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-full min-h-[40px]"
-                  style={{ background: 'rgba(124,158,255,0.08)', border: '1px solid rgba(124,158,255,0.2)' }}>
+                  style={{ background: 'rgba(100,142,204,0.07)', border: '1px solid rgba(100,142,204,0.16)' }}>
                   <div className="w-1.5 h-1.5 rounded-full" style={{ background: '#86dfba', boxShadow: '0 0 6px #86dfba' }} />
                   <span className="text-sm">{providerInfo.icon}</span>
                 </motion.button>
@@ -5018,28 +5082,29 @@ function StudyScreen({ config, callAI, aiConfig, onBack, onRevision, onChangeAPI
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-4 mt-2">
-          <div className="glass-panel rounded-3xl p-4 md:p-5 relative overflow-hidden">
+          <div className="glass-panel rounded-2xl p-4 md:p-5 relative overflow-hidden">
             <div className="accent-bar-left" />
             <div className="pl-3 md:pl-4">
               <div className="flex items-start justify-between flex-wrap gap-3">
                 <div className="min-w-0 flex-1">
-                  <h2 className="text-lg md:text-xl font-black mb-1 truncate" style={{ color: '#e2e8f0' }}>{subject.split('-').slice(1).join('-').trim() || subject}</h2>
-                  <p className="text-[12px] font-bold" style={{ color: '#94a3b8' }}>{subject.split('-')[0].trim()}</p>
+                  <h2 className="text-lg md:text-xl font-black mb-1 truncate" style={{ color: '#E7ECF5' }}>{subject.split('-').slice(1).join('-').trim() || subject}</h2>
+                  <p className="text-[12px] font-bold" style={{ color: '#8B9CB5' }}>{subject.split('-')[0].trim()}</p>
                   <div className="flex items-center space-x-2 mt-2 flex-wrap gap-1.5">
                     <span className="atlas-tag atlas-tag-indigo">{scheme}</span>
-                    <span className="atlas-tag" style={{ background: examType==='internal'?'rgba(240,201,135,0.1)':'rgba(134,223,186,0.1)', border: examType==='internal'?'1px solid rgba(240,201,135,0.3)':'1px solid rgba(134,223,186,0.3)', color: examType==='internal'?'#f0c987':'#86dfba' }}>
+                    <span className="atlas-tag" style={{ background: examType==='internal'?'rgba(224,178,110,0.08)':'rgba(134,223,186,0.08)', border: examType==='internal'?'1px solid rgba(224,178,110,0.28)':'1px solid rgba(134,223,186,0.28)', color: examType==='internal'?'#E0B26E':'#86DFBA' }}>
                       {examType==='internal'?'Internal':'Semester'}
                     </span>
-                    {isDrawing && <span className="atlas-tag" style={{ background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.3)', color: '#c4b5fd' }}>📐 Drawing</span>}
+                    {isDrawing && <span className="atlas-tag" style={{ background: 'rgba(123,167,222,0.08)', border: '1px solid rgba(123,167,222,0.28)', color: '#7BA7DE' }}>📐 Drawing</span>}
+                    {internalMarks !== '' && internalMarks != null && <span className="atlas-tag" style={{ background: 'rgba(123,167,222,0.06)', border: '1px solid rgba(123,167,222,0.22)', color: '#7BA7DE' }}>Internal: {internalMarks}</span>}
                     {runtimeTargetMark && <span className="atlas-tag atlas-tag-amber">🎯 Target: {runtimeTargetMark}</span>}
                     {isTargetMode && <span className="atlas-tag atlas-tag-green">★ {targetStrategy.totalMustStudy} Questions</span>}
                   </div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <div className="text-xl md:text-2xl font-black" style={{ color: '#e2e8f0' }}>
+                  <div className="text-xl md:text-2xl font-black" style={{ color: '#E7ECF5' }}>
                     {studiedIds.size}/{isTargetMode ? targetStrategy.totalMustStudy : allQuestions.length}
                   </div>
-                  <div className="text-[10px] font-bold uppercase" style={{ color: '#64748b' }}>Done</div>
+                  <div className="text-[10px] font-bold uppercase" style={{ color: '#697B96' }}>Done</div>
                   {studiedIds.size >= 1 && (
                     <motion.button type="button" onClick={() => onRevision(studiedQuestions)}
                       whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
@@ -5052,7 +5117,7 @@ function StudyScreen({ config, callAI, aiConfig, onBack, onRevision, onChangeAPI
               {details.pyq && !focusMode && (
                 <div className="mt-3 p-3 rounded-xl" style={{ background: 'rgba(240,201,135,0.06)', border: '1px solid rgba(240,201,135,0.15)' }}>
                   <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: '#f0c987' }}>💡 Exam Insight</p>
-                  <p className="text-[12px] font-medium leading-relaxed" style={{ color: '#94a3b8' }}>{details.pyq}</p>
+                  <p className="text-[12px] font-medium leading-relaxed" style={{ color: '#8B9CB5' }}>{details.pyq}</p>
                 </div>
               )}
             </div>
@@ -5065,15 +5130,15 @@ function StudyScreen({ config, callAI, aiConfig, onBack, onRevision, onChangeAPI
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 rounded-2xl p-4"
             style={{ background: 'rgba(134,223,186,0.07)', border: '1px solid rgba(134,223,186,0.25)' }}>
             <p className="text-xs font-black mb-1" style={{ color: '#86dfba' }}>🎯 Target Mode Active — Showing ONLY the {targetStrategy.totalMustStudy} questions needed to score {runtimeTargetMark} marks</p>
-            <p className="text-[11px] leading-relaxed" style={{ color: '#94a3b8' }}>
-              Guaranteed <span className="font-black" style={{ color: '#f0c987' }}>{targetStrategy.guaranteedMarks} marks</span> · Avg confidence: <span className="font-black" style={{ color: '#7c9eff' }}>{targetStrategy.avgConfidence}%</span>
+            <p className="text-[11px] leading-relaxed" style={{ color: '#8B9CB5' }}>
+              Guaranteed <span className="font-black" style={{ color: '#f0c987' }}>{targetStrategy.guaranteedMarks} marks</span> · Avg confidence: <span className="font-black" style={{ color: '#5F8ECC' }}>{targetStrategy.avgConfidence}%</span>
             </p>
           </motion.div>
         )}
 
         {details.formulas?.length > 0 && !focusMode && (
           <div className="glass-panel rounded-2xl p-4 mb-4">
-            <div className="flex items-center space-x-2 mb-3"><Hash className="w-4 h-4" style={{ color: '#a78bfa' }} /><span className="text-sm font-black" style={{ color: '#e2e8f0' }}>Key Formulas</span></div>
+            <div className="flex items-center space-x-2 mb-3"><Hash className="w-4 h-4" style={{ color: '#3D5F94' }} /><span className="text-sm font-black" style={{ color: '#E7ECF5' }}>Key Formulas</span></div>
             <div className="flex flex-wrap gap-2">{details.formulas.map((f,i) => <div key={i} className="formula-box text-xs md:text-sm">{f}</div>)}</div>
           </div>
         )}
@@ -5083,12 +5148,12 @@ function StudyScreen({ config, callAI, aiConfig, onBack, onRevision, onChangeAPI
             <div className="flex flex-nowrap gap-2 min-w-max md:flex-wrap md:min-w-0" role="group">
               <button type="button" onClick={() => setSelectedModules([])}
                 className="px-3 py-1.5 rounded-xl text-[11px] font-black transition-all min-h-[40px]"
-                style={{ background: selectedModules.length===0?'rgba(124,158,255,0.2)':'rgba(255,255,255,0.03)', border:`1px solid ${selectedModules.length===0?'rgba(124,158,255,0.5)':'rgba(255,255,255,0.07)'}`, color: selectedModules.length===0?'#a5b4fc':'#64748b' }}
+                style={{ background: selectedModules.length===0?'rgba(100,142,204,0.16)':'rgba(13,20,36,0.9)', border:`1px solid ${selectedModules.length===0?'rgba(100,142,204,0.4)':'#FFFFFF'}`, color: selectedModules.length===0?'#9BB9E0':'#697B96' }}
                 aria-pressed={selectedModules.length===0}>All</button>
               {modules.map(m => (
                 <button key={m} type="button" onClick={() => setSelectedModules(p => p.includes(m)?p.filter(x=>x!==m):[...p,m])}
                   className="px-3 py-1.5 rounded-xl text-[11px] font-black transition-all min-h-[40px]"
-                  style={{ background: selectedModules.includes(m)?'rgba(124,158,255,0.2)':'rgba(255,255,255,0.03)', border:`1px solid ${selectedModules.includes(m)?'rgba(124,158,255,0.5)':'rgba(255,255,255,0.07)'}`, color: selectedModules.includes(m)?'#a5b4fc':'#64748b' }}
+                  style={{ background: selectedModules.includes(m)?'rgba(100,142,204,0.16)':'rgba(13,20,36,0.9)', border:`1px solid ${selectedModules.includes(m)?'rgba(100,142,204,0.4)':'#FFFFFF'}`, color: selectedModules.includes(m)?'#9BB9E0':'#697B96' }}
                   aria-pressed={selectedModules.includes(m)}>M{m}</button>
               ))}
             </div>
@@ -5100,27 +5165,27 @@ function StudyScreen({ config, callAI, aiConfig, onBack, onRevision, onChangeAPI
             {[{ id:'A', label:'Part A', sub:`${studiedA}/${partAQs.length} studied` },{ id:'B', label:'Part B', sub:`${studiedB}/${partBQs.length} studied` }].map(tab => (
               <button key={tab.id} type="button" role="tab" aria-selected={activeTab===tab.id} onClick={() => setActiveTab(tab.id)}
                 className="flex-1 py-3 px-3 md:px-4 rounded-2xl transition-all text-left min-h-[56px]"
-                style={{ background: activeTab===tab.id?'linear-gradient(135deg,rgba(124,158,255,0.2),rgba(167,139,250,0.15))':'rgba(255,255,255,0.02)', border:`1px solid ${activeTab===tab.id?'rgba(124,158,255,0.45)':'rgba(255,255,255,0.06)'}` }}>
-                <p className="text-sm font-black" style={{ color: activeTab===tab.id?'#a5b4fc':'#94a3b8' }}>{tab.label}</p>
-                <p className="text-[11px] mt-0.5" style={{ color: activeTab===tab.id?'#a78bfa':'#64748b' }}>{tab.sub}</p>
+                style={{ background: activeTab===tab.id?'linear-gradient(135deg,rgba(100,142,204,0.14),rgba(100,142,204,0.06))':'rgba(13,20,36,0.78)', border:`1px solid ${activeTab===tab.id?'rgba(100,142,204,0.3)':'rgba(100,142,204,0.12)'}` }}>
+                <p className="text-sm font-black" style={{ color: activeTab===tab.id?'#9BB9E0':'#8B9CB5' }}>{tab.label}</p>
+                <p className="text-[11px] mt-0.5" style={{ color: activeTab===tab.id?'#3D5F94':'#697B96' }}>{tab.sub}</p>
               </button>
             ))}
           </div>
         )}
 
         <div className="flex items-center space-x-3 mb-4 px-1 flex-wrap gap-y-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#64748b' }}>Probability:</span>
-          {[{ label:'🔥 HIGH', color:'#86dfba', conf:'80–95%' },{ label:'⚡ MED', color:'#f0c987', conf:'65%' },{ label:'📌 LOW', color:'#94a3b8', conf:'45%' }].map(p => (
+          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#697B96' }}>Probability:</span>
+          {[{ label:'🔥 HIGH', color:'#86dfba', conf:'80–95%' },{ label:'⚡ MED', color:'#f0c987', conf:'65%' },{ label:'📌 LOW', color:'#8B9CB5', conf:'45%' }].map(p => (
             <span key={p.label} className="text-[10px] font-black" style={{ color: p.color }}>{p.label} ({p.conf})</span>
           ))}
         </div>
 
         <div className="space-y-4 md:space-y-5">
           {visibleQuestions.length === 0 ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16 glass-panel rounded-3xl">
-              <BookOpen className="w-10 h-10 mx-auto mb-3" style={{ color: '#334155' }} />
-              <p className="font-bold" style={{ color: '#64748b' }}>No questions for selected filter.</p>
-              <button type="button" onClick={() => setSelectedModules([])} className="mt-3 text-sm font-bold underline min-h-[44px] flex items-center mx-auto" style={{ color: '#7c9eff' }}>Clear filters</button>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16 glass-panel rounded-2xl">
+              <BookOpen className="w-10 h-10 mx-auto mb-3" style={{ color: '#697B96' }} />
+              <p className="font-bold" style={{ color: '#697B96' }}>No questions for selected filter.</p>
+              <button type="button" onClick={() => setSelectedModules([])} className="mt-3 text-sm font-bold underline min-h-[44px] flex items-center mx-auto" style={{ color: '#5F8ECC' }}>Clear filters</button>
             </motion.div>
           ) : (
             <AnimatePresence>
@@ -5188,17 +5253,17 @@ function RevisionScreen({ studiedQuestions, subject, onBack, callAI, scheme }) {
   const currentPhase = RAG_PHASES[Math.min(phase, RAG_PHASES.length - 1)];
 
   return (
-    <div className="min-h-screen relative overflow-x-hidden" style={{ background: '#04050a' }}>
+    <div className="min-h-screen relative overflow-x-hidden" style={{ background: '#0A1020' }}>
       <div className="aurora-bg" aria-hidden="true"><div className="aurora-orb aurora-orb-1" /><div className="aurora-orb aurora-orb-2" /><div className="aurora-orb aurora-orb-3" /></div>
       <div className="noise-overlay" aria-hidden="true" /><ReadingProgressBar />
       <div className="relative z-10 max-w-4xl mx-auto px-4 py-6 md:py-8">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-between mb-6 md:mb-8">
-          <button type="button" onClick={onBack} className="flex items-center space-x-2 text-sm font-semibold min-h-[44px]" style={{ color: '#94a3b8' }}>
+          <button type="button" onClick={onBack} className="flex items-center space-x-2 text-sm font-semibold min-h-[44px] rounded-lg transition-colors hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5F8ECC]/60" style={{ color: '#8B9CB5' }} aria-label="Back to study">
             <ArrowLeft className="w-4 h-4" /><span>Back</span>
           </button>
           <div className="flex items-center space-x-2">
-            <BookMarked className="w-5 h-5" style={{ color: '#7c9eff' }} />
-            <span className="font-black text-sm md:text-base" style={{ color: '#e2e8f0' }}>Revision Mode</span>
+            <BookMarked className="w-5 h-5" style={{ color: '#5F8ECC' }} />
+            <span className="font-black text-sm md:text-base" style={{ color: '#E7ECF5' }}>Revision Mode</span>
             <span className="atlas-tag atlas-tag-green">{studiedQuestions.length} topics</span>
           </div>
         </motion.div>
@@ -5206,20 +5271,20 @@ function RevisionScreen({ studiedQuestions, subject, onBack, callAI, scheme }) {
         {!started ? (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="text-center mb-6 md:mb-8">
-              <h1 className="text-3xl md:text-4xl font-black mb-2" style={{ color: '#e2e8f0' }}>Let's Revise! 🚀</h1>
-              <p className="text-sm" style={{ color: '#94a3b8' }}>{studiedQuestions.length} questions · AI creates your plan</p>
+              <h1 className="text-3xl md:text-4xl font-black mb-2" style={{ color: '#E7ECF5' }}>Let's Revise! 🚀</h1>
+              <p className="text-sm" style={{ color: '#8B9CB5' }}>{studiedQuestions.length} questions · AI creates your plan</p>
             </div>
-            <div className="glass-panel rounded-3xl p-4 md:p-6 mb-5">
-              <h2 className="text-sm font-black mb-3" style={{ color: '#e2e8f0' }}>Topics You Studied</h2>
+            <div className="glass-panel rounded-2xl p-4 md:p-6 mb-5">
+              <h2 className="text-sm font-black mb-3" style={{ color: '#E7ECF5' }}>Topics You Studied</h2>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {studiedQuestions.map((q,i) => (
                   <div key={i} className="flex items-start space-x-3 p-3 rounded-xl" style={{ background: 'rgba(134,223,186,0.05)', border: '1px solid rgba(134,223,186,0.12)' }}>
                     <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: '#86dfba' }} />
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold leading-relaxed" style={{ color: '#e2e8f0' }}>{q.text}</p>
+                      <p className="text-xs font-semibold leading-relaxed" style={{ color: '#E7ECF5' }}>{q.text}</p>
                       <div className="flex space-x-2 mt-0.5 flex-wrap gap-1">
                         <span className="text-[10px] font-black" style={{ color: '#86dfba' }}>{q.marks}m</span>
-                        {q.module && <span className="text-[10px] font-black" style={{ color: '#7c9eff' }}>M{q.module}</span>}
+                        {q.module && <span className="text-[10px] font-black" style={{ color: '#5F8ECC' }}>M{q.module}</span>}
                         <span className="text-[10px] font-black" style={{ color: freqToBadge(q.freq||2).color }}>{freqToConfidence(q.freq||2)}%</span>
                       </div>
                     </div>
@@ -5228,47 +5293,47 @@ function RevisionScreen({ studiedQuestions, subject, onBack, callAI, scheme }) {
               </div>
             </div>
             {details.formulas?.length > 0 && (
-              <div className="glass-panel rounded-3xl p-4 md:p-5 mb-5">
-                <h2 className="text-sm font-black mb-3" style={{ color: '#e2e8f0' }}>Key Formulas</h2>
+              <div className="glass-panel rounded-2xl p-4 md:p-5 mb-5">
+                <h2 className="text-sm font-black mb-3" style={{ color: '#E7ECF5' }}>Key Formulas</h2>
                 <div className="space-y-2">{details.formulas.map((f,i) => <div key={i} className="formula-box text-xs md:text-sm">{f}</div>)}</div>
               </div>
             )}
-            <div className="glass-panel rounded-3xl p-4 md:p-5 mb-5">
-              <label className="text-[11px] font-black uppercase tracking-widest block mb-3" style={{ color: '#94a3b8' }}>Time Available</label>
+            <div className="glass-panel rounded-2xl p-4 md:p-5 mb-5">
+              <label className="text-[11px] font-black uppercase tracking-widest block mb-3" style={{ color: '#8B9CB5' }}>Time Available</label>
               <div className="grid grid-cols-3 gap-2 mb-3">
                 {['15 minutes','30 minutes','1 hour'].map(t => (
                   <button key={t} type="button" onClick={() => setRevTime(t)}
                     className="py-2.5 rounded-2xl text-xs font-bold transition-all min-h-[44px]"
-                    style={{ background: revTime===t?'rgba(124,158,255,0.2)':'rgba(255,255,255,0.03)', border:`1px solid ${revTime===t?'rgba(124,158,255,0.5)':'rgba(255,255,255,0.07)'}`, color: revTime===t?'#a5b4fc':'#64748b' }}
+                    style={{ background: revTime===t?'rgba(100,142,204,0.16)':'rgba(13,20,36,0.9)', border:`1px solid ${revTime===t?'rgba(100,142,204,0.4)':'#FFFFFF'}`, color: revTime===t?'#9BB9E0':'#697B96' }}
                     aria-pressed={revTime===t}>{t}</button>
                 ))}
               </div>
               <input type="text" placeholder="Or custom (e.g. 45 minutes)" value={revTime} onChange={e => setRevTime(e.target.value)} maxLength={50}
-                className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium" style={{ color: '#e2e8f0' }} />
+                className="w-full atlas-input rounded-2xl px-4 py-3 text-sm font-medium" style={{ color: '#E7ECF5' }} />
             </div>
             {error && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-4 p-3 rounded-xl"
                 style={{ background: 'rgba(232,165,152,0.08)', border: '1px solid rgba(232,165,152,0.25)' }}>
                 <p className="text-[12px] font-medium" style={{ color: '#e8a598' }}>{error}</p>
-                <button type="button" onClick={() => { setError(''); startRevision(); }} className="mt-1.5 text-[11px] font-bold underline min-h-[32px]" style={{ color: '#a5b4fc' }}>↻ Retry</button>
+                <button type="button" onClick={() => { setError(''); startRevision(); }} className="mt-1.5 text-[11px] font-bold underline min-h-[32px]" style={{ color: '#9BB9E0' }}>↻ Retry</button>
               </motion.div>
             )}
             {loading ? (
-              <div className="rounded-2xl p-5" style={{ background: 'rgba(124,158,255,0.06)', border: '1px solid rgba(124,158,255,0.2)' }}>
+              <div className="rounded-2xl p-5" style={{ background: 'rgba(100,142,204,0.06)', border: '1px solid rgba(100,142,204,0.16)' }}>
                 <div className="flex items-center space-x-3 mb-3">
                   <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
-                    <Brain className="w-5 h-5" style={{ color: '#7c9eff' }} />
+                    <Brain className="w-5 h-5" style={{ color: '#5F8ECC' }} />
                   </motion.div>
                   <div className="flex-1 min-w-0">
                     <motion.p key={phase} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                      className="text-[11px] font-medium truncate" style={{ color: '#7c9eff' }}>
+                      className="text-[11px] font-medium truncate" style={{ color: '#5F8ECC' }}>
                       {currentPhase.icon} {currentPhase.label}
                     </motion.p>
                   </div>
-                  <span className="text-[11px] font-black" style={{ color: '#a78bfa' }}>{Math.round(progress)}%</span>
+                  <span className="text-[11px] font-black" style={{ color: '#3D5F94' }}>{Math.round(progress)}%</span>
                 </div>
-                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(124,158,255,0.1)' }}>
-                  <motion.div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#7c9eff,#a78bfa)' }} animate={{ width: `${progress}%` }} />
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(100,142,204,0.08)' }}>
+                  <motion.div className="h-full rounded-full" style={{ background: 'linear-gradient(90deg,#5F8ECC,#3D5F94)' }} animate={{ width: `${progress}%` }} />
                 </div>
               </div>
             ) : (
@@ -5282,13 +5347,13 @@ function RevisionScreen({ studiedQuestions, subject, onBack, callAI, scheme }) {
         ) : (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <div className="glass-panel rounded-2xl p-3 md:p-4 mb-5 flex items-center space-x-4 flex-wrap gap-2">
-              <Clock className="w-4 h-4" style={{ color: '#7c9eff' }} />
-              <span className="text-xs font-black" style={{ color: '#94a3b8' }}>{revTime}</span>
+              <Clock className="w-4 h-4" style={{ color: '#5F8ECC' }} />
+              <span className="text-xs font-black" style={{ color: '#8B9CB5' }}>{revTime}</span>
               <span className="text-xs font-black ml-auto" style={{ color: '#86dfba' }}>{studiedQuestions.length} topics</span>
               <button type="button" onClick={() => { setStarted(false); setRevContent(''); setError(''); progRef.current = 0; }}
-                className="text-[11px] font-bold underline min-h-[44px] flex items-center" style={{ color: '#a5b4fc' }}>Change time</button>
+                className="text-[11px] font-bold underline min-h-[44px] flex items-center" style={{ color: '#9BB9E0' }}>Change time</button>
             </div>
-            <div className="glass-panel rounded-3xl p-5 md:p-7"><AIResultRenderer content={revContent} /></div>
+            <div className="glass-panel rounded-2xl p-5 md:p-7"><AIResultRenderer content={revContent} /></div>
           </motion.div>
         )}
       </div>
@@ -5314,13 +5379,13 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: '#04050a' }} role="alert">
+        <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ background: '#0A1020' }} role="alert">
           <div className="text-center max-w-md">
             <div className="mb-6 p-4 rounded-2xl inline-block" style={{ background: 'rgba(232,165,152,0.1)', border: '1px solid rgba(232,165,152,0.3)' }}>
               <AlertCircle className="w-10 h-10" style={{ color: '#e8a598' }} />
             </div>
-            <h1 className="text-2xl font-black mb-2" style={{ color: '#e2e8f0' }}>Something went wrong</h1>
-            <p className="text-sm mb-2" style={{ color: '#94a3b8' }}>ATLAS encountered an unexpected error. Your bookmarks are safe.</p>
+            <h1 className="text-2xl font-black mb-2" style={{ color: '#E7ECF5' }}>Something went wrong</h1>
+            <p className="text-sm mb-2" style={{ color: '#8B9CB5' }}>ATLAS encountered an unexpected error. Your bookmarks are safe.</p>
             <p className="text-[12px] font-mono mb-6 break-all" style={{ color: 'rgba(232,165,152,0.7)' }}>
               {String(this.state.error?.message || 'Unknown error').slice(0, 200)}
             </p>
@@ -5345,6 +5410,14 @@ if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => { apiClient.abortAll(); });
 }
 
+// Canonical home / root screen for each Back context when there is no
+// meaningful in-app history entry to pop (prevents blank or broken routes).
+const BACK_ROOTS = {
+  boot: 'welcome',
+  study: 'dashboard',
+  revision: 'study',
+};
+
 function AppInner() {
   const [screen, setScreen] = useState('reconnecting');
   const [aiConfig, setAiConfig] = useState(null);
@@ -5357,6 +5430,77 @@ function AppInner() {
   const [switchToast, setSwitchToast] = useState({ show: false, from: null, to: null });
   const quoteTimerRef = useRef(null);
   const bookmarksHook = useBookmarks();
+
+  // --- navigation history: browser Back/Forward + one consistent UI Back button ---
+  const navStackRef = useRef([]);    // in-app screens in history order
+  const navCursorRef = useRef(-1);   // index of the current entry in navStackRef
+  const rootEstablishedRef = useRef(false);
+
+  const establishRoot = useCallback((s) => {
+    navStackRef.current = [s];
+    navCursorRef.current = 0;
+    rootEstablishedRef.current = true;
+    window.history.replaceState({ atlas: s }, '');
+  }, []);
+
+  // Forward navigation: record a real history entry so Back/Forward always works.
+  const navigateTo = useCallback((nextScreen) => {
+    const stack = navStackRef.current;
+    const top = stack.length ? stack[navCursorRef.current] : null;
+    if (top === nextScreen) return; // no-op guard: pushing the current screen twice
+    if (rootEstablishedRef.current) {
+      // moving forward past a "Back" point clears the stale forward-history (standard SPA rule)
+      navStackRef.current = stack.slice(0, navCursorRef.current + 1);
+      navStackRef.current.push(nextScreen);
+      navCursorRef.current = navStackRef.current.length - 1;
+      window.history.pushState({ atlas: nextScreen }, '');
+    } else {
+      establishRoot(nextScreen);
+    }
+    setScreen(nextScreen);
+  }, [establishRoot]);
+
+  // Establish the history root from the first real screen resolved at boot
+  // ('reconnecting' is transient and never recorded).
+  useEffect(() => {
+    if (rootEstablishedRef.current || screen === 'reconnecting') return;
+    establishRoot(screen);
+  }, [screen, establishRoot]);
+
+  // Browser Back/Forward -> restore the matching in-app screen.
+  useEffect(() => {
+    const onPopState = (e) => {
+      const s = e.state && e.state.atlas;
+      if (!s) return; // entry belongs to a page before the SPA -> browser handles it
+      const stack = navStackRef.current;
+      const cursor = navCursorRef.current;
+      if (stack[cursor] === s) return;
+      let idx = -1;
+      for (let i = cursor + 1; i < stack.length; i++) { if (stack[i] === s) { idx = i; break; } }
+      if (idx === -1) { for (let i = cursor - 1; i >= 0; i--) { if (stack[i] === s) { idx = i; break; } } }
+      if (idx === -1) { stack.push(s); idx = stack.length - 1; } // forward re-entry of a trimmed entry
+      navCursorRef.current = idx;
+      setScreen(s);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  const goBack = useCallback(() => {
+    if (navCursorRef.current > 0) {
+      window.history.back(); // popstate restores and mirrors the previous screen
+      return;
+    }
+    // No meaningful in-app history entry -> canonical ATLAS home for this context.
+    const home = BACK_ROOTS[screen];
+    if (home) {
+      navStackRef.current = [home];
+      navCursorRef.current = 0;
+      rootEstablishedRef.current = true;
+      window.history.replaceState({ atlas: home }, '');
+      setScreen(home);
+    }
+  }, [screen]);
 
   // BUG 17 FIX: validate saved provider has a known adapter/config
   useEffect(() => {
@@ -5459,9 +5603,9 @@ function AppInner() {
       setShowChangeAPI(false);
     } else {
       SecureStorage.clearAll(); conversationManager.clear(); apiClient.abortAll(); rateLimiter.clear(); clearGeminiHealCache();
-      setAiConfig(null); setStudyConfig(null); setStudiedForRevision([]); setShowChangeAPI(false); setScreen('boot');
+      setAiConfig(null); setStudyConfig(null); setStudiedForRevision([]); setShowChangeAPI(false); navigateTo('boot');
     }
-  }, [aiConfig]);
+  }, [aiConfig, navigateTo]);
 
   return (
     <>
@@ -5477,18 +5621,19 @@ function AppInner() {
         )}
         {screen === 'welcome' && (
           <motion.div key="welcome" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.98 }}>
-            <WelcomeScreen onContinue={() => setScreen('boot')} />
+            <WelcomeScreen onContinue={() => navigateTo('boot')} />
           </motion.div>
         )}
         {screen === 'boot' && (
           <motion.div key="boot" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-            <BootScreen initialError={bootError} onBoot={cfg => { setBootError(''); setAiConfig(cfg); setScreen('dashboard'); }} />
+            <BootScreen initialError={bootError} onBack={goBack}
+              onBoot={cfg => { setBootError(''); setAiConfig(cfg); navigateTo('dashboard'); }} />
           </motion.div>
         )}
         {screen === 'dashboard' && (
           <motion.div key="dashboard" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}>
             <DashboardScreen
-              onStartStudy={cfg => { setStudyConfig(cfg); setScreen('study'); }}
+              onStartStudy={cfg => { setStudyConfig(cfg); navigateTo('study'); }}
               aiConfig={aiConfig} onChangeAPI={handleChangeAPI}
               onShowBookmarks={() => setShowBookmarks(true)} bookmarksCount={bookmarksHook.bookmarks.length} />
           </motion.div>
@@ -5496,8 +5641,8 @@ function AppInner() {
         {screen === 'study' && studyConfig && callAI && (
           <motion.div key="study" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }}>
             <StudyScreen config={studyConfig} callAI={callAI} aiConfig={aiConfig}
-              onBack={() => setScreen('dashboard')}
-              onRevision={qs => { setStudiedForRevision(qs); setScreen('revision'); }}
+              onBack={goBack}
+              onRevision={qs => { setStudiedForRevision(qs); navigateTo('revision'); }}
               onChangeAPI={handleChangeAPI} onShowBookmarks={() => setShowBookmarks(true)}
               bookmarksCount={bookmarksHook.bookmarks.length} bookmarksHook={bookmarksHook} />
           </motion.div>
@@ -5505,7 +5650,7 @@ function AppInner() {
         {screen === 'revision' && studyConfig && callAI && studiedForRevision.length > 0 && (
           <motion.div key="revision" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <RevisionScreen studiedQuestions={studiedForRevision} subject={studyConfig.subject}
-              scheme={studyConfig.scheme} callAI={callAI} onBack={() => setScreen('study')} />
+              scheme={studyConfig.scheme} callAI={callAI} onBack={goBack} />
           </motion.div>
         )}
       </AnimatePresence>
